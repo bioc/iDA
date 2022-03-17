@@ -24,3 +24,4 @@ Suggests:
     scater,
     ggplot2,
     Rtsne
+biocViews: Software, DimensionReduction, Clustering
