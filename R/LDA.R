@@ -3,7 +3,7 @@
 #' Identify rows in a data frame with high sclaed dispersion. This rule was
 #' taken from the Seurat package.
 #'
-#' @param data.use (data.frame) features are rows, samples are columns. Rows must be named.
+#' @param NormCounts (data.frame) features are rows, samples are columns. Rows must be named.
 #' @param dispersion.cutoff (numeric) rows returned will have scaled dispersion higher provided cutoff
 #' @param mean.low.cutoff (numeric) rows returned will have average higher than this cutoff
 #' @param mean.high.cutoff (numeric) rows returned will have average lower than this cutoff
@@ -27,9 +27,7 @@ VariableGenes <- function(NormCounts,
   ExpMeans[is.na(x = ExpMeans)] <- 0
   num.bin <- 20
   data.x.bin <- cut(x = ExpMeans, breaks = num.bin)
-  
   names(x = data.x.bin) <- names(x = ExpMeans)
-  
   mean.y <- tapply(X = dispersions, INDEX = data.x.bin, FUN = mean)
   sd.y <- tapply(X = dispersions, INDEX = data.x.bin, FUN = sd)
 
@@ -44,10 +42,12 @@ VariableGenes <- function(NormCounts,
     ExpMeans < mean.high.cutoff
   var.features <- names(dispersions[variable_idx])
   retlist <- list(
-      "use.data" = data.use,
-      "var.features" = var.features)
+    "dispersions" = data.frame(scaled.dispersions, ExpMeans),
+    "use.data" = data.use,
+    "var.features" = var.features)
   return(retlist)
 }
+
 
 #' Split dataset by cluster label
 #'
@@ -80,8 +80,9 @@ withinclass_scattermatrix_LDA <- function(splitclusters, diag = FALSE) {
   ## calculate within class scatter matrix for each cluster
   wcsm <- c()
   k <- 1
+  start_idx <- 3 # within each entry of splitclusters, we want to exlclude the first two columns which are the cell names and current cluster ID
   for (i in splitclusters) {
-    dataMatrix <- t(i[, 3:(length(i))])
+    dataMatrix <- t(i[, start_idx:(length(i))])
     wcsm[[k]] <- (t(t(dataMatrix) - clustermeans[[k]])) %*% (t(dataMatrix) - clustermeans[[k]])
     k <- k + 1
   }
@@ -90,8 +91,10 @@ withinclass_scattermatrix_LDA <- function(splitclusters, diag = FALSE) {
   ## Sw <- matrix(0L, nrow = nrow(wcsm[[1]]), ncol = ncol(wcsm[[1]]))
   Sw <- array(0L, dim(wcsm[[1]]))
   k <- 1
-  list <- sapply(splitclusters, function(l) l[1])
-  n_obs <- sum(lengths(list))
+  for (i in seq_along(splitclusters)){
+    list <- c(list, splitclusters[[i]][["Row.names"]])
+  }
+  n_obs <- length(list)
   for (i in wcsm) {
     Sw <- Sw + ((dim(splitclusters[[k]])[1]) / n_obs) * i
     k <- k + 1
@@ -153,21 +156,22 @@ betweenclass_scatter_matrix <- function(splitclusters) {
   ## calculate means vector for each cluster
   clustermeans <- c()
   k <- 1
+  start_idx <- 3 # within each entry of splitclusters, we want to exlclude the first two columns which are the cell names and current cluster ID
   for (i in splitclusters) {
-    clustermeans[[k]] <- colMeans(i[,3:(length(i))])
+    clustermeans[[k]] <- colMeans(i[,start_idx:(length(i))])
     k <- k + 1
   }
 
   ## calculate overallMeans for each feature
   overallMeanVector <- c()
-  for (i in 1:length(clustermeans[[1]])) {
-    overallMeanVector[[i]] <- mean(sapply(clustermeans, function(l) l[[i]]))
+  for (i in seq_along(clustermeans[[1]])) { #1:length(clustermeans[[1]])) {
+    overallMeanVector[[i]] <- mean(vapply(clustermeans, function(l) l[[i]], FUN.VALUE = 0))
   }
 
   ## calculate each btsc matrix per cluster
   btsc <- c()
 
-  for (i in 1:length(clustermeans)) {
+  for (i in seq_along(clustermeans)) { #1:length(clustermeans)) {
     btsc[[i]] <- ((clustermeans[[i]] - unlist(overallMeanVector)) %*%
                   t(clustermeans[[i]] - unlist(overallMeanVector)))
     ## * length(rownames(splitclusters[[1]]))
@@ -183,32 +187,24 @@ betweenclass_scatter_matrix <- function(splitclusters) {
   return(Sb)
 }
 
-## TODO: This is not using set.seed properly
+
 decomposesvd <- function(withinclust_sc_mat,
                          betweenclust_sc_mat,
-                         nu = 10, set.seed = FALSE) {
-  if (!is.numeric(set.seed)) {
+                         nu = 10) {
     svd <- svd(solve(withinclust_sc_mat) %*% betweenclust_sc_mat, nu)
-    top_eigenvectors <- svd$u[, 1:nu]
-    top_eigenvalues <- svd$d[1:nu]
-    return(list(top_eigenvectors, top_eigenvalues))
-  } else if (is.numeric(set.seed)) {
-    set.seed <- set.seed
-    svd <- svd(solve(withinclust_sc_mat) %*% betweenclust_sc_mat, nu)
-    top_eigenvectors <- svd$u[, 1:nu]
-    top_eigenvalues <- svd$d[1:nu]
+    top_eigenvectors <- svd$u[, seq_along(nu)] 
+    top_eigenvalues <- svd$d[seq_along(nu)]
     return(list(eigenvecs = top_eigenvectors, eigenvalues = top_eigenvalues))
-  }
 }
 
-## TODO: This is not using set.seed properly
+
 decomposeirlba <- function(withinclust_sc_mat, betweenclust_sc_mat, nu = 10, set.seed = FALSE) {
   if (!is.numeric(set.seed)) {
     svd <- irlba(solve(withinclust_sc_mat) %*% betweenclust_sc_mat, nu)
     top_eigenvectors <- svd$u
     return(top_eigenvectors)
   } else if (is.numeric(set.seed)) {
-    set.seed <- set.seed
+    set.seed(set.seed)
     svd <- irlba(solve(withinclust_sc_mat) %*% betweenclust_sc_mat, nu)
     top_eigenvectors <- svd$u
     return(top_eigenvectors)
@@ -276,10 +272,11 @@ getSNN <- function(data.use,
 #' van Eck (2013) \emph{The European Physical Journal B}.
 #'
 #'
-#'@param SNN a matrix of shared nearest neighbors (output from getSNN)
-#'@param set.seed Seed of the random number generator.
+#' @param SNN a matrix of shared nearest neighbors (output from getSNN)
+#' @param set.seed Seed of the random number generator.
 
-#'@importFrom NetworkToolbox louvain
+#' @importFrom NetworkToolbox louvain
+#' @return a list of identities for clustering
 getLouvain <- function(SNN, set.seed = set.seed){
    if (!is.numeric(set.seed)){
      #louvain_clusts <- NetworkToolbox::louvain(A = SNN, gamma = resolution)
@@ -296,3 +293,4 @@ getLouvain <- function(SNN, set.seed = set.seed){
      return(idents)
    }
  }
+

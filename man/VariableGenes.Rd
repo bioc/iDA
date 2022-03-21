@@ -4,10 +4,10 @@
 \alias{VariableGenes}
 \title{Find Variable Genes}
 \usage{
-VariableGenes(data.use, dispersion.cutoff, mean.low.cutoff, mean.high.cutoff)
+VariableGenes(NormCounts, dispersion.cutoff, mean.low.cutoff, mean.high.cutoff)
 }
 \arguments{
-\item{data.use}{(data.frame) features are rows, samples are columns. Rows must be named.}
+\item{NormCounts}{(data.frame) features are rows, samples are columns. Rows must be named.}
 
 \item{dispersion.cutoff}{(numeric) rows returned will have scaled dispersion higher provided cutoff}
 

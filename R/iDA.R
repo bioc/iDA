@@ -1,16 +1,26 @@
 #'  Find embedding space using iterative LDA
 #'
-#'  Takes scaled data and iterates between clustering using the Louvain community detection method and embedding in LDA space, then recluster in
-#'  the LDA transformed data space.
+#'  Takes scaled data and iterates between clustering using the Louvain 
+#'  community detection method and embedding in LDA space, then recluster
+#'  in the LDA transformed data space.
 #'
-#' @param data.use (data.frame) A dataframe of scaled data to find embedding for. (sample x feature)
-#' @param NormCounts (dataframe) A dataframe of normalized counts
-#' @param scaled (boolean) An indicator of if the data has already been normalized and scaled.
-#' @param var.Features Which method to use when finding variable features
-#' @param mean.low.cutoff  (numeric) Bottom cutoff on mean for identifying variable genes, passed to function [`VariableGenes`]
-#' @param mean.high.cutoff (numeric) Top cutoff on mean for identifying variable genes (passed to [`VariableGenes`])
-#' @param dispersion.cutoff (numeric) Bottom cutoff on dispersion for identifying variable genes (passed to [`VariableGenes`])
-#' @param k.param (numeric) Defines k for the k-nearest neighbor algorithm (passed to [`getSNN`])
+#' @param data.use (matrix) A matrix of raw count data to find embedding for. 
+#' (sample x feature)
+#' @param NormCounts (matrix) A matrix of normalized and scaled count 
+#' data to find embedding for. (sample x feature)
+#' @param scaled (boolean) An indicator of if the data has already been normalized
+#' and scaled.
+#' @param Feature.selection.method Which method to use when finding variable features
+#' @param var.features (character) A character list of var.features which are in
+#' the townames of the data.use matrix
+#' @param mean.low.cutoff  (numeric) Bottom cutoff on mean for identifying variable
+#' genes, passed to function [`VariableGenes`]
+#' @param mean.high.cutoff (numeric) Top cutoff on mean for identifying variable genes 
+#' (passed to [`VariableGenes`])
+#' @param dispersion.cutoff (numeric) Bottom cutoff on dispersion for identifying 
+#' variable genes (passed to [`VariableGenes`])
+#' @param k.param (numeric) Defines k for the k-nearest neighbor algorithm (passed 
+#' to [`getSNN`])
 #' @param prune.SNN (numeric) Sets the cutoff for acceptable Jaccard index when
 #' computing the neighborhood overlap for the SNN construction. Any edges with
 #' values less than or equal to this will be set to 0 and removed from the SNN
@@ -20,21 +30,23 @@
 #' graph (e.g. To use the first 10 PCs, pass 1:10) (passed to [`getSNN`])
 #' @param diag Diagonalize the within class scatter matrix (assume the features are independent
 #'  within each cluster)
-#' @param set.seed (numeric or FALSE) seed random number generator before building KNN graph. (passed to [`getSNN`])
+#' @param set.seed (numeric or FALSE) seed random number generator before building KNN graph.
+#' (passed to [`getSNN`])
 #' @param c.param (numeric) Defines the number of desired clusters to be found in the embedding
 #' @param cluster.method What clustering method to use 
 #'
 #' @import irlba
 #' @import igraph
 #' @import plyr
+#' @importFrom DESeq2 varianceStabilizingTransformation
+#' @importFrom stats kmeans
 #' @return n number of dataframes for each cluster's data
 #'
-
-#' @export
 iDA_core <- function(data.use,
                      NormCounts = NULL,
                      scaled = FALSE,
-                     var.Features = "scran",
+                     Feature.selection.method = "scran",
+                     var.features = NULL,
                      mean.low.cutoff = 0.1,
                      mean.high.cutoff = 8,
                      dispersion.cutoff = 1,
@@ -46,36 +58,31 @@ iDA_core <- function(data.use,
                      c.param = NULL,
                      cluster.method = "walktrap") {
 
-  ## if (scaled == FALSE){
-  ## normalize data by dividing by the sum of cell feature counts and then multiplying the cell counts by 10000
-  ## data.use.norm <- Matrix::t((Matrix::t(data.use)/ Matrix::colSums(data.use))* 10000)
-  ## data.use.norm <- log1p(data.use.norm)
-
-  ## scale data with max 10
-  ## data.use.scaled <- scale(data.use.norm)
-  ##  }
-
-  ## find variable features
-
-  if (var.Features == "scran") {
-    stats <- scran::modelGeneVar(NormCounts)
-    if (dim(data.use)[1] < 3000) {
-      var.features <- rownames(data.use)
-    } else {
-      var.features <- scran::getTopHVGs(stats, n = 3000)
-    }
-  } else if (var.Features == "disp") {
-    if (is.null(NormCounts)) {
-      ## variance stabilizing transformation using Deseq2
-      NormCounts <- varianceStabilizingTransformation(data.use)
-    }
-    var.features <- VariableGenes(NormCounts, dispersion.cutoff = dispersion.cutoff, mean.low.cutoff = mean.low.cutoff, mean.high.cutoff = mean.high.cutoff)[["var.features"]]
-  } else {
-    ## Use it all?
-    message("Potentially spuriously using all data.")
-    var.features <- rownames(data.use)
+  if (scaled == TRUE & is.null(NormCounts)) {
+     NormCounts <- data.use
   }
-  
+  ## find variable features
+  if (is.null(var.features)) {
+    if (Feature.selection.method == "scran") {
+      if (nrow(data.use) < 3000) {
+        var.features <- rownames(data.use)
+      } else {
+        stats <- scran::modelGeneVar(NormCounts)
+        var.features <- scran::getTopHVGs(stats, n = 3000)
+      }
+    } else if (Feature.selection.method == "disp") {
+      if (is.null(NormCounts)) {
+        ## variance stabilizing transformation using Deseq2
+        message("Input data was not normalized. Normalizing with Deseq2's vst(). \n If this isn't right, check `scaled`` argument.")
+        NormCounts <- varianceStabilizingTransformation(data.use)
+      }
+      var.features <- VariableGenes(NormCounts, dispersion.cutoff = dispersion.cutoff, mean.low.cutoff = mean.low.cutoff, mean.high.cutoff = mean.high.cutoff)[["var.features"]]
+    } else {
+      ## Use it all?
+      message("Potentially spuriously using all data.")
+      var.features <- rownames(data.use)
+    }
+  }
   if(length(var.features) == 0){
     stop("No variable features found.")
   }
@@ -107,7 +114,7 @@ iDA_core <- function(data.use,
     clusters <- cbind(start = rep(1,dim(transformed)[1]), currentclust = louvainClusters)
     
   } else if (cluster.method == "kmeans"){
-    kmeansclusters <- stats::kmeans(transformed, centers = c.param)
+    kmeansclusters <- kmeans(transformed, centers = c.param)
     clusters <- cbind(start = rep(1,dim(transformed)[1]), currentclust = kmeansclusters$cluster)
     
   } else if (cluster.method == "walktrap"){
@@ -135,18 +142,15 @@ iDA_core <- function(data.use,
       stop("Invalid c.param")
     }
   }
-  
-  
   rownames(clusters) <- rownames(transformed)
-  
   concordance <- mclust::adjustedRandIndex(clusters[,(dim(clusters)[2]-1)], clusters[,(dim(clusters)[2])])
   
   #start iterations
   i = 1        
   while(concordance < .98) {
     if(i > 1){
-      message(paste0("iteration ", i-1))
-      message(paste0("concordance: ", concordance))
+      message("iteration ", i-1)
+      message("concordance: ", concordance)
     }
     
     #merge data with cluster
@@ -162,7 +166,8 @@ iDA_core <- function(data.use,
 
     # calculate between cluster scatter matrix
     Sb <- betweenclass_scatter_matrix(splitclusters = splitclusters)
-    eigenvecs <- decomposesvd(Sw, Sb, nu = length(splitclusters) - 1, set.seed = set.seed)[["eigenvecs"]]
+    decomp <- decomposesvd(Sw, Sb, nu = length(splitclusters) - 1)
+    eigenvecs <- decomp[["eigenvecs"]]
     
     #transform data
     eigenvectransformed <- t(var_data) %*% eigenvecs
@@ -198,18 +203,18 @@ iDA_core <- function(data.use,
       }
     }
     
-    concordance <- mclust::adjustedRandIndex(clusters[,(dim(clusters)[2]-1)], clusters[,(dim(clusters)[2])])
+    concordance <- mclust::adjustedRandIndex(clusters[,(ncol(clusters)-1)], clusters[,(ncol(clusters))])
     i = i + 1
   }
 
   geneweights <- as.data.frame(eigenvecs)
 
   rownames(geneweights) <- var.features
-  colnames(geneweights) <- paste("LD", 1:dim(geneweights)[2], sep = "")
-
+  colnames(geneweights) <- paste("LD", seq_along(ncol(geneweights)), sep = "")
+                                 #1:dim(geneweights)[2], sep = "")
   rownames(eigenvectransformed) <- rownames(transformed)
-  colnames(eigenvectransformed) <- paste("LD", 1:dim(eigenvectransformed)[2], sep = "")
-
+  colnames(eigenvectransformed) <- paste("LD", seq_along(ncol(eigenvectransformed)), sep = "")
+                                         #1:dim(eigenvectransformed)[2], sep = "")
   message("final concordance: ")
   message(concordance)
   ## What are the names for this list?

@@ -4,12 +4,14 @@
 \alias{iDA,Seurat-method}
 \title{Method for Seurat object to input data to iDA}
 \usage{
-\S4method{iDA}{Seurat}(object, assay, ...)
+\S4method{iDA}{Seurat}(object, assay, selection.method = "vst", ...)
 }
 \arguments{
 \item{object}{The single cell experiment object to run iDA on}
 
 \item{assay}{The assay to take counts from}
+
+\item{selection.method}{The Seurat method to use for variable feature selection.}
 
 \item{...}{Additional arguments passed to object constructors}
 }

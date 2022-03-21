@@ -4,10 +4,12 @@
 \alias{iDA,matrix-method}
 \title{Set method for matrix to input data to iDA}
 \usage{
-\S4method{iDA}{matrix}(object, ...)
+\S4method{iDA}{matrix}(object, scaled, ...)
 }
 \arguments{
 \item{object}{The object to run iDA on}
+
+\item{scaled}{Is the input matrix normalized and scaled already?}
 
 \item{...}{Additonal arguments passed to object constructors}
 }

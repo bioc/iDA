@@ -4,10 +4,12 @@
 \alias{iDA,SingleCellExperiment-method}
 \title{Method for SingleCellExperiment object to input data to iDA}
 \usage{
-\S4method{iDA}{SingleCellExperiment}(object, ...)
+\S4method{iDA}{SingleCellExperiment}(object, selection.method = "scran", ...)
 }
 \arguments{
 \item{object}{The single cell experiment object to run iDA on}
+
+\item{selection.method}{The method to use for finding variable features}
 
 \item{...}{Additonal arguments passed to object constructors}
 }

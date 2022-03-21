@@ -11,6 +11,9 @@ getLouvain(SNN, set.seed = set.seed)
 
 \item{set.seed}{Seed of the random number generator.}
 }
+\value{
+a list of identities for clustering
+}
 \description{
 Identify clusters of cells by a shared nearest neighbor (SNN) modularity
 optimization based clustering algorithm. Optimize the modularity function to

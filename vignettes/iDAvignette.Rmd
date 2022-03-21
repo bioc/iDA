@@ -44,14 +44,13 @@ demultiplex_info(sce) <- cell_barcode_matching
 UMI_dup_info(sce) <- UMI_duplication
 sce <- detect_outlier(sce)
 sce <- remove_outliers(sce)
-
 ```
 
 
 # iDA decomposition
 
 We perform the iDA decomposition on the scaled sce data to get the clustering and embedding.
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval = FALSE}
 sce <- iDA(sce, set.seed = 11, diag = TRUE)
 
 #cluster assignments
@@ -68,8 +67,7 @@ geneweights <- na.omit(rowData(sce))
 
 We can see how many cells are in each cluster.
 
-```{r}
-
+```{r, eval = FALSE}
 count <- table(sce_iDAident)
 count.df <- data.frame(count)
 
@@ -85,7 +83,7 @@ plot + geom_bar(stat="identity") +
 ## tSNE of iDA decomposition
 
 We will compare the iDA verus the PCA decomposion, so we'll do a tSNE of each decomp to compare the cluster separation
-```{r}
+```{r, eval = FALSE}
 set.seed(10)
 tsne_iDA = as.data.frame(Rtsne(sce_iDAembedding, pca = FALSE)$Y)
 
@@ -97,13 +95,12 @@ ggplot(tsne_iDA, aes(x = V1, y = V2, col = as.factor(sce_iDAident))) + geom_poin
 
 To compare what information we are gaining from iDA over a PCA reduction, we'll look at the tSNE of the PCA reduction to compare clusters.
 
-```{r}
+```{r, eval = FALSE}
 #find variable genes
 var.features <- VariableGenes(logcounts(sce), dispersion.cutoff = 1, mean.low.cutoff = .1, mean.high.cutoff = 8)
-
  
 #PCA of same rank as the iDA decomp
-pca_data <- prcomp(t(logcounts(sce)[var.features,]), rank=10)
+pca_data <- prcomp(t(logcounts(sce)[var.features$var.features,]), rank=10)
 
 set.seed(10)
 tsne_PCAsce <-as.data.frame(Rtsne(pca_data$x[,1:10], pca = FALSE)$Y)
@@ -120,7 +117,7 @@ Given this dataset with only highly variable genes, the PCA does a pretty good j
 
 Once we determine which LD's we see separation between cluster 4 and 6 in, we can evaluate the highly weighted genes for those dimensions to see the expression differences between the clusters. 
 
-```{r}
+```{r, eval = FALSE}
 #LDs we see separation between cluster 4 and 6
 
 #plot LD weight versus a dummy number so everything isn't piled on top of each other. so we are looking for separation in the x-axis direction. 
@@ -140,12 +137,10 @@ Now we can look at the top genes for each of these LD's to see which genes defin
 ## look at top genes separating cluster 4 and 6
 
 ### LD7
-```{r}
-
+```{r, eval = FALSE}
 #LD7 top genes
 topgenes_LD7 <- rownames(geneweights)[sort(abs(geneweights[,7]), index.return = TRUE, decreasing = TRUE)$ix[1:10]]
 scescaled_topgenesLD7 <- as.data.frame(t(rbind(logcounts(sce)[topgenes_LD7,], as.factor(colLabels(sce)$iDAclusters))))
-
 
 #in the top 10 genes, we see cluster 4 and 6 have different expression patterns
 ggplot(scescaled_topgenesLD7, aes(group = as.factor(V11), y = ENSMUSG00000002944, col = as.factor(V11))) + geom_boxplot() + labs(colour = "iDA Cluster")
@@ -167,10 +162,6 @@ ggplot(scescaled_topgenesLD7, aes(group = as.factor(V11), y = ENSMUSG00000044468
 ggplot(scescaled_topgenesLD7, aes(group = as.factor(V11), y = ENSMUSG00000064354, col = as.factor(V11))) + geom_boxplot() + labs(colour = "iDA Cluster")
 
 ggplot(scescaled_topgenesLD7, aes(group = as.factor(V11), y = ENSMUSG00000029780, col = as.factor(V11))) + geom_boxplot() + labs(colour = "iDA Cluster")
-
-
-
-
 ```
 
 We see the top 10 highly weighted genes in the LD direction which best separates cluster 4 from 6 (LD7) show differing expression patterns between these two clusters. For further analysis, differential expression analysis could be done to see if these genes are truly differentially expressed between these clusters. 

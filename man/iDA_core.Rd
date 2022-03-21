@@ -7,8 +7,9 @@
 iDA_core(
   data.use,
   NormCounts = NULL,
-  scaled = TRUE,
-  var.Features = "scran",
+  scaled = FALSE,
+  Feature.selection.method = "scran",
+  var.features = NULL,
   mean.low.cutoff = 0.1,
   mean.high.cutoff = 8,
   dispersion.cutoff = 1,
@@ -22,21 +23,31 @@ iDA_core(
 )
 }
 \arguments{
-\item{data.use}{(data.frame) A dataframe of scaled data to find embedding for. (sample x feature)}
+\item{data.use}{(matrix) A matrix of raw count data to find embedding for. 
+(sample x feature)}
 
-\item{NormCounts}{(dataframe) A dataframe of normalized counts}
+\item{NormCounts}{(matrix) A matrix of normalized and scaled count 
+data to find embedding for. (sample x feature)}
 
-\item{scaled}{(boolean) An indicator of if the data has already been normalized and scaled.}
+\item{scaled}{(boolean) An indicator of if the data has already been normalized
+and scaled.}
 
-\item{var.Features}{Which method to use when finding variable features}
+\item{Feature.selection.method}{Which method to use when finding variable features}
 
-\item{mean.low.cutoff}{(numeric) Bottom cutoff on mean for identifying variable genes, passed to function [`VariableGenes`]}
+\item{var.features}{(character) A character list of var.features which are in
+the townames of the data.use matrix}
 
-\item{mean.high.cutoff}{(numeric) Top cutoff on mean for identifying variable genes (passed to [`VariableGenes`])}
+\item{mean.low.cutoff}{(numeric) Bottom cutoff on mean for identifying variable
+genes, passed to function [`VariableGenes`]}
 
-\item{dispersion.cutoff}{(numeric) Bottom cutoff on dispersion for identifying variable genes (passed to [`VariableGenes`])}
+\item{mean.high.cutoff}{(numeric) Top cutoff on mean for identifying variable genes 
+(passed to [`VariableGenes`])}
 
-\item{k.param}{(numeric) Defines k for the k-nearest neighbor algorithm (passed to [`getSNN`])}
+\item{dispersion.cutoff}{(numeric) Bottom cutoff on dispersion for identifying 
+variable genes (passed to [`VariableGenes`])}
+
+\item{k.param}{(numeric) Defines k for the k-nearest neighbor algorithm (passed 
+to [`getSNN`])}
 
 \item{prune.SNN}{(numeric) Sets the cutoff for acceptable Jaccard index when
 computing the neighborhood overlap for the SNN construction. Any edges with
@@ -50,7 +61,8 @@ graph (e.g. To use the first 10 PCs, pass 1:10) (passed to [`getSNN`])}
 \item{diag}{Diagonalize the within class scatter matrix (assume the features are independent
 within each cluster)}
 
-\item{set.seed}{(numeric or FALSE) seed random number generator before building KNN graph. (passed to [`getSNN`])}
+\item{set.seed}{(numeric or FALSE) seed random number generator before building KNN graph.
+(passed to [`getSNN`])}
 
 \item{c.param}{(numeric) Defines the number of desired clusters to be found in the embedding}
 
@@ -60,6 +72,7 @@ within each cluster)}
 n number of dataframes for each cluster's data
 }
 \description{
-Takes scaled data and iterates between clustering using the Louvain community detection method and embedding in LDA space, then recluster in
- the LDA transformed data space.
+Takes scaled data and iterates between clustering using the Louvain 
+ community detection method and embedding in LDA space, then recluster
+ in the LDA transformed data space.
 }
