@@ -10,7 +10,6 @@ iDA_core(
   prune.SNN = 1/15,
   dims.use = 10,
   diag = TRUE,
-  set.seed = FALSE,
   c.param = NULL,
   cluster.method = "walktrap"
 )
@@ -34,9 +33,6 @@ of the SNN graph (e.g. To use the first 10 PCs, pass 1:10)
 
 \item{diag}{Diagonalize the within class scatter matrix (assume the features
 are independent within each cluster)}
-
-\item{set.seed}{(numeric or FALSE) seed random number generator before
-building KNN graph. (passed to [`getSNN`])}
 
 \item{c.param}{(numeric) Defines the number of desired clusters to be found
 in the embedding}

@@ -1,7 +1,12 @@
 #' Generic method to input data to iDA
 #'
 #' @param object The object to run iDA on
-#' @param ... Additonal arguments passed to object constructors
+#' @param ... Additional arguments passed to object constructors
+#' @examples 
+#' data("sc_sample_data")
+#' sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
+#' set.seed(11)
+#' iDA(sce)
 #' @return iDA output with clustering, gene weights, and cell weights
 #' @export
 setGeneric("iDA", signature=c("object"),
@@ -17,7 +22,7 @@ setGeneric("iDA", signature=c("object"),
 #' genes (passed to [`VariableGenesGeneric`])
 #' @param dispersion.cutoff (numeric) Bottom cutoff on dispersion for 
 #' identifying variable genes (passed to [`VariableGenesGeneric`])
-#' @param ... Additonal arguments passed to object constructors
+#' @param ... Additional arguments passed to object constructors
 #' @return iDA output with clustering, gene weights, and cell weights
 #' @export
 setMethod("iDA", "matrix",
@@ -136,7 +141,6 @@ setMethod("iDA", "Seurat",
             } else {
               scale.data <- GetAssayData(object, slot = "scale.data") 
             }
-            
             if (length(VariableFeatures(object)) == 0) {
               object <- FindVariableFeatures(object, 
                                           selection.method = selection.method)

@@ -21,6 +21,6 @@ returns the between class scatter matrix
 data(iris)
 iris_input <- dplyr::select(iris, -c("Species"))
 sp_dfs <- split(iris_input, f = iris$Species)
-bcs_mat <- iDA::BCS(sp_dfs)
+bcs_mat <- BCS(sp_dfs)
 
 }

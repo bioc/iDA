@@ -18,36 +18,27 @@
 #' (passed to [`getSNN`])
 #' @param diag Diagonalize the within class scatter matrix (assume the features
 #' are independent within each cluster)
-#' @param set.seed (numeric or FALSE) seed random number generator before
-#' building KNN graph. (passed to [`getSNN`])
 #' @param c.param (numeric) Defines the number of desired clusters to be found
-#'in the embedding
+#' in the embedding
 #' @param cluster.method What clustering method to use 
 #'
 #' @import irlba
 #' @import igraph
 #' @import plyr
-#' @importFrom DESeq2 varianceStabilizingTransformation
 #' @importFrom stats kmeans
 #' @importFrom mclust adjustedRandIndex
 #' @return n number of dataframes for each cluster's data
-#'
+
 iDA_core <- function(var.data,
                     k.param = 10,
                     prune.SNN = 1/15,
                     dims.use = 10,
                     diag = TRUE,
-                    set.seed = FALSE,
                     c.param = NULL,
                     cluster.method = "walktrap") {
   #calculate svd for covariance matrix of variable_features
-  if(!is.numeric(set.seed)){
     svd <- svdr(as.matrix(var.data), k = dims.use)
-  } else if (is.numeric(set.seed)){
-    set.seed(set.seed)
-    svd <- svdr(as.matrix(var.data), k = dims.use)
-  }
-  
+    
   # transform data
   transformed <- svd$v
   rownames(transformed) <- colnames(var.data)
@@ -55,10 +46,9 @@ iDA_core <- function(var.data,
   #cluster
   if(cluster.method == "louvain") {
     snn <- getSNN(data.use = transformed, 
-                  set.seed = set.seed, 
                   k.param = k.param, 
                   prune.SNN = prune.SNN)
-    louvainClusters <- getLouvain(SNN = snn, set.seed = set.seed)
+    louvainClusters <- getLouvain(SNN = snn)
     clusters <- cbind(start = rep(1,dim(transformed)[1]), 
                       currentclust = louvainClusters)
   } else if (cluster.method == "kmeans"){
@@ -67,13 +57,8 @@ iDA_core <- function(var.data,
                       currentclust = kmeansclusters$cluster)
   } else if (cluster.method == "walktrap"){
     snn <- getSNN(data.use = transformed, 
-                  set.seed = set.seed, 
                   k.param = k.param, 
                   prune.SNN = prune.SNN)
-    if(!is.numeric(set.seed)){
-      walktrapClusters <- cluster_walktrap(snn)
-    } else if (is.numeric(set.seed)){
-      set.seed(set.seed)
       walktrapClusters <- cluster_walktrap(snn)
     }
     #pick highest modularity
@@ -84,7 +69,6 @@ iDA_core <- function(var.data,
                                     cut_at(walktrapClusters, 
                                             no = i)))
       }
-      
       maxmodclust <- cut_at(walktrapClusters, no = which.max(modularity))
       clusters <- as.data.frame(cbind(start = rep(1,nrow(transformed)), 
                                           currentclust = maxmodclust))
@@ -96,7 +80,7 @@ iDA_core <- function(var.data,
     } else {
       stop("Invalid c.param")
     }
-  }
+  
   rownames(clusters) <- rownames(transformed)
   
   #calculate concordance between last and current iteration's clustering 
@@ -126,11 +110,9 @@ iDA_core <- function(var.data,
     #calculate SNN matrix for top LDs
     if (cluster.method == "louvain") {
       snn <- getSNN(data.use = eigenvectransformed, 
-                    set.seed = set.seed,
                     k.param = k.param, 
                     prune.SNN = prune.SNN)
-      louvainClusters <- getLouvain(SNN = as.matrix(snn), 
-                                    set.seed = set.seed)
+      louvainClusters <- getLouvain(SNN = as.matrix(snn))
       clusters <- cbind(clusters, currentclust = louvainClusters)
     } else if (cluster.method == "kmeans"){
       kmeansclusters <- kmeans(eigenvectransformed, 
@@ -139,7 +121,6 @@ iDA_core <- function(var.data,
                         currentclust = kmeansclusters$cluster)
     } else if (cluster.method == "walktrap"){
       snn_transformed <- getSNN(data.use = eigenvectransformed, 
-                                set.seed = set.seed, 
                                 k.param = k.param, 
                                 prune.SNN = prune.SNN)
       #cluster
@@ -174,8 +155,8 @@ iDA_core <- function(var.data,
   colnames(geneweights) <- paste("LD", 1:ncol(geneweights), sep = "")
   rownames(eigenvectransformed) <- rownames(transformed)
   colnames(eigenvectransformed) <- paste("LD", 
-                                         1:ncol(eigenvectransformed), 
-                                         sep = "")
+                                        1:ncol(eigenvectransformed), 
+                                        sep = "")
   message("final concordance: ")
   message(concordance)
   retlist <- list(clusters = clusters[, dim(clusters)[2]],

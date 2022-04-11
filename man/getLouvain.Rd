@@ -4,12 +4,10 @@
 \alias{getLouvain}
 \title{Cluster Determination}
 \usage{
-getLouvain(SNN, set.seed = set.seed)
+getLouvain(SNN)
 }
 \arguments{
 \item{SNN}{a matrix of shared nearest neighbors (output from getSNN)}
-
-\item{set.seed}{Seed of the random number generator.}
 }
 \value{
 a list of identities for clustering
@@ -25,6 +23,6 @@ data("sc_sample_data")
 sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
 logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
 snn <- iDA::getSNN(data.use = logcounts(sce))
-clusters <- iDA::getLouvain(snn, set.seed = 11)
+clusters <- iDA::getLouvain(snn)
 
 }

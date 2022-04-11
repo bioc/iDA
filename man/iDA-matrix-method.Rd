@@ -27,7 +27,7 @@ genes (passed to [`VariableGenesGeneric`])}
 \item{dispersion.cutoff}{(numeric) Bottom cutoff on dispersion for 
 identifying variable genes (passed to [`VariableGenesGeneric`])}
 
-\item{...}{Additonal arguments passed to object constructors}
+\item{...}{Additional arguments passed to object constructors}
 }
 \value{
 iDA output with clustering, gene weights, and cell weights

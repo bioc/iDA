@@ -4,7 +4,7 @@
 \alias{getSNN}
 \title{Cluster Determination}
 \usage{
-getSNN(data.use, k.param = 10, prune.SNN = 1/15, set.seed = FALSE)
+getSNN(data.use, k.param = 10, prune.SNN = 1/15)
 }
 \arguments{
 \item{data.use}{(matrix) Matrix with scaled data to find nearest neighbors}
@@ -12,12 +12,10 @@ getSNN(data.use, k.param = 10, prune.SNN = 1/15, set.seed = FALSE)
 \item{k.param}{(numeric) Defines k for the k-nearest neighbor algorithm}
 
 \item{prune.SNN}{(numeric) Sets the cutoff for acceptable Jaccard index when
-computing the neighborhood overlap for the SNN construction. Any edges with
-values less than or equal to this will be set to 0 and removed from the SNN
-graph. Essentially sets the strigency of pruning (0 --- no pruning, 1 ---
-prune everything).}
-
-\item{set.seed}{(numeric or FALSE) seed random number generator before 
+ computing the neighborhood overlap for the SNN construction. Any edges with
+ values less than or equal to this will be set to 0 and removed from the SNN
+ graph. Essentially sets the strigency of pruning (0 --- no pruning, 1 ---
+ prune everything).
 building KNN graph}
 }
 \value{

@@ -121,7 +121,7 @@ WCS <- function(splitclusters, diag = FALSE) {
 #' data(iris)
 #' iris_input <- dplyr::select(iris, -c("Species"))
 #' sp_dfs <- split(iris_input, f = iris$Species)
-#' bcs_mat <- iDA::BCS(sp_dfs)
+#' bcs_mat <- BCS(sp_dfs)
 #' 
 #' @return returns the between class scatter matrix
 BCS <- function(splitclusters) {
@@ -204,7 +204,6 @@ decomposeSVD <- function(WCSmat,
 #'  values less than or equal to this will be set to 0 and removed from the SNN
 #'  graph. Essentially sets the strigency of pruning (0 --- no pruning, 1 ---
 #'  prune everything).
-#' @param random.seed (numeric or NULL) seed random number generator before 
 #' building KNN graph
 #' @import igraph
 #' @import scran
@@ -217,8 +216,7 @@ decomposeSVD <- function(WCSmat,
 #' @return The SNN graph (igraph object)
 getSNN <- function(data.use,
                    k.param = 10,
-                   prune.SNN = 1/15,
-                   random.seed = NULL) {
+                   prune.SNN = 1/15) {
   data.use <- as.matrix(data.use)
   n.obs <- nrow(x = data.use)
   
@@ -228,8 +226,6 @@ getSNN <- function(data.use,
             call. = FALSE)
     k.param <- n.obs - 1
   }
-
-  if (!is.numeric(set.seed)) {
     SNN_igraph <- scran::buildKNNGraph(data.use, k = k.param, transposed = TRUE)
     snn.matrix <- similarity(SNN_igraph, method = "jaccard")
     snn.matrix[snn.matrix < 1/15] <- 0
@@ -239,18 +235,6 @@ getSNN <- function(data.use,
                                              weighted = TRUE, 
                                              mode = "undirected")
     return(snn.graph)
-  } else if (is.numeric(set.seed)) {
-    set.seed(set.seed)
-    SNN_igraph <- scran::buildKNNGraph(data.use, k = k.param, transposed = TRUE)
-    snn.matrix <- similarity(SNN_igraph, method = "jaccard")
-    snn.matrix[snn.matrix < 1/15] <- 0
-    rownames(x = snn.matrix) <- rownames(x = data.use)
-    colnames(x = snn.matrix) <- rownames(x = data.use)
-    snn.graph <- graph_from_adjacency_matrix(snn.matrix, 
-                                             weighted = TRUE, 
-                                             mode = "undirected")
-    return(snn.graph)
-  }
 }
 
 #' Cluster Determination
@@ -261,26 +245,18 @@ getSNN <- function(data.use,
 #' van Eck (2013) \emph{The European Physical Journal B}.
 #'
 #' @param SNN a matrix of shared nearest neighbors (output from getSNN)
-#' @param set.seed Seed of the random number generator.
 #' @importFrom NetworkToolbox louvain
 #' @examples 
 #' data("sc_sample_data")
 #' sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
 #' logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
 #' snn <- iDA::getSNN(data.use = logcounts(sce))
-#' clusters <- iDA::getLouvain(snn, set.seed = 11)
+#' clusters <- iDA::getLouvain(snn)
 #' 
 #' @return a list of identities for clustering
-getLouvain <- function(SNN, set.seed = set.seed){
-  if (!is.numeric(set.seed)){
+getLouvain <- function(SNN){
     louvain_clusters <- cluster_louvain(SNN)
     idents <- louvain_clusters$membership
     return(idents)
-  } else if (is.numeric(set.seed)){
-    set.seed(set.seed)
-    louvain_clusters <- cluster_louvain(SNN)
-    idents <- louvain_clusters$membership
-    return(idents)
-  }
 }
 

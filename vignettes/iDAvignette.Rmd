@@ -51,7 +51,7 @@ sce <- remove_outliers(sce)
 
 We perform the iDA decomposition on the scaled sce data to get the clustering and embedding.
 ```{r}
-sce <- iDA(sce, set.seed = 11, diag = TRUE)
+sce <- iDA(sce, diag = TRUE)
 
 #cluster assignments
 sce_iDAident <- colLabels(sce)$iDAclusters
