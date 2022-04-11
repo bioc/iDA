@@ -49,7 +49,7 @@ test_that("decomposeSVD works correctly", {
     svd <- decomposeSVD(wcs_mat, bcs_mat, nu = 4)
     expect_equal(ncol(svd$eigenvecs), 4)
     expect_equal(nrow(svd$eigenvecs), 4)
-    expect_equal(dim(svd$eigenvalues), 4)
+    expect_equal(length(svd$eigenvalues), 4)
 })
 
 # test getSNN
