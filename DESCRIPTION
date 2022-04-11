@@ -2,9 +2,43 @@ Package: iDA
 Type: Package
 Title: Define embedding space for data with clustered architecture
 Version: 0.99.0
-Authors@R: c(person("Theresa", "Alexander", email = "reesyxan@gmail.com", role = "cre"), person("Hector", "Corrada Bravo", email = "hcorrada@gmail.com", role = "aut"))
-Imports: scran, igraph, irlba, SingleCellExperiment, Seurat, plyr, NetworkToolbox, DESeq2, SummarizedExperiment, mclust, stats, scuttle
-Description: This package takes in a scaled data matrix and outputs the optimal latent space embedding using an iterative process of computing the singular value decomposition, clustering in the embeddging space, using linear discriminant analysis to find features which define cluster separation, and reclustering in the embedding space. 
+Authors@R: c(person("Theresa", "Alexander", 
+    email = "reesyxan@gmail.com", role = "cre"), 
+    person("Hector", "Corrada Bravo", 
+    email = "hcorrada@gmail.com", role = "aut"))
+Imports: scran, igraph, irlba, SingleCellExperiment, Seurat, plyr, 
+    NetworkToolbox, DESeq2, SummarizedExperiment, mclust, stats, 
+    scuttle, genefilter, dplyr, utils
+Description: Discovering low-dimensional embeddings that describe the separation 
+    of any underlying discrete latent structure in data is an important 
+    motivation for applying these techniques since these latent classes can 
+    represent important sources of unwanted variability, such as batch effects,
+    or interesting sources of signal such as unknown cell types. The features 
+    that define this discrete latent structure are often hard to identify in
+    high-dimensional data. Principal component analysis (PCA) is one of the most
+    widely used methods as an unsupervised step for dimensionality reduction. 
+    This reduction technique finds linear transformations of the data which 
+    explain total variance. When the goal is detecting discrete structure, PCA 
+    is applied with the assumption that classes will be separated in directions 
+    of maximum variance. However, PCA will fail to accurately find discrete 
+    latent structure if this assumption does not hold. Visualization techniques,
+    such as t-Distributed Stochastic Neighbor Embedding (t-SNE) and Uniform
+    Manifold Approximation and Projection (UMAP), attempt to mitigate these 
+    problems with PCA by creating a low-dimensional space where similar objects 
+    are modeled by nearby points in the low-dimensional embedding and dissimilar
+    objects are modeled by distant points with high probability. However, since
+    t-SNE and UMAP are computationally expensive, often a PCA reduction is done 
+    before applying them which makes it sensitive to PCAs downfalls. Also, tSNE 
+    is limited to only two or three dimensions as a visualization tool, which 
+    may not be adequate for retaining discriminatory information. The linear 
+    transformations of PCA are preferable to non-linear transformations provided
+    by methods like t-SNE and UMAP for interpretable feature weights. Here, we 
+    propose iterative discriminant analysis (iDA), a dimensionality reduction 
+    technique designed to mitigate these limitations. iDA takes in a scaled data
+    matrix of variable features and outputs an embedding that carries 
+    discriminatory information which optimally separates latent clusters using
+    linear transformations that permit post hoc analysis to determine features 
+    that define these latent structures.
 License: MIT + file LICENSE
 VignetteBuilder: knitr
 Encoding: UTF-8

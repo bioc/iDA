@@ -15,7 +15,9 @@ https://github.com/LuyiTian/sc_mixology/blob/master/data/9cellmix_qc.RData
 
 ```{r}
 load("~/Downloads/9cellmix_qc.RData")
-library(prodlim)
+library("prodlim")
+library("SummarizedExperiment")
+library("scater")
 ```
 
 ```{r}
@@ -109,8 +111,8 @@ get_walktrapClusters <- function(embedding, c.param = NA){
 
 CumulativeARI <- function(embedding, knownlabels, c.param = NA){
   ARIs <- c()
-   for (i in 1:(dim(embedding)[2])) {
-     walktrapClusters <- get_walktrapClusters(embedding[,1:i], c.param)
+   for (i in seq_along(ncol(embedding))) {
+     walktrapClusters <- get_walktrapClusters(embedding[,seq_len(i)], c.param)
      ARI <- adjustedRandIndex(walktrapClusters, knownlabels)
     ARIs <- c(ARIs, ARI) 
        #pick highest modularity 
@@ -121,22 +123,21 @@ CumulativeARI <- function(embedding, knownlabels, c.param = NA){
 
 CumulativeFstatistic <- function(embedding, labels) {
   RSS <- c()
-  i = 1
-    for (i in 1:(dim(embedding)[2])) {
+    for (i in seq_along(ncol(embedding))) {
       RSS[i] = anova(lm(as.numeric(embedding[,i]) ~
                              as.factor(labels)))[2,2]
     }
   
   TSS = c()
-  for (i in 1:(dim(embedding)[2])) {
+  for (i in seq_along(ncol(embedding))) {
     TSS[i] = sum(anova(lm(as.numeric(embedding[,i]) ~
                                as.factor(labels)))[,2])
   }
   
   Fstat <- c()
   i = 1
-  for (i in 1:length(TSS)){
-    Fstat <- c(Fstat, (sum(TSS[1:i]) - sum(RSS[1:i]))/sum(RSS[1:i]))
+  for (i in seq_along(TSS)){
+    Fstat <- c(Fstat, (sum(TSS[seq_len(i)]) - sum(RSS[seq_len(i)]))/sum(RSS[seq_len(i)]))
   }
   return(Fstat)
 }
@@ -145,8 +146,6 @@ CumulativeFstatistic <- function(embedding, labels) {
 
 
 ```{r}
-library(SummarizedExperiment)
-library(scater)
 #scran normalize
 sce_SC1_qc <- computeSumFactors(sce_SC1_qc)
 sce_SC1_qc <- logNormCounts(sce_SC1_qc)
@@ -198,31 +197,30 @@ colData(sce_SC4_qc)$H1975_prop <- rep(-1, length(colData(sce_SC4_qc)$H1975))
 colData(sce_SC4_qc)$HCC827_prop <- rep(-1, length(colData(sce_SC4_qc)$HCC827))
 
 
-for (i in 1:nrow(sce_SC4_qc@colData)) {
+for (i in seq_along(nrow(sce_SC4_qc@colData))) {
   colData(sce_SC4_qc)$H2228_prop[i] <- colData(sce_SC4_qc)$H2228[i] / 9
   colData(sce_SC4_qc)$H1975_prop[i] <- colData(sce_SC4_qc)$H1975[i] / 9
   colData(sce_SC4_qc)$HCC827_prop[i] <- colData(sce_SC4_qc)$HCC827[i] / 9
 }
 
-for (i in 1:nrow(sce_SC1_qc@colData)) {
+for (i in seq_along(nrow(sce_SC1_qc@colData))) {
   colData(sce_SC1_qc)$H2228_prop[i] <- colData(sce_SC1_qc)$H2228[i] / 9
   colData(sce_SC1_qc)$H1975_prop[i] <- colData(sce_SC1_qc)$H1975[i] / 9
   colData(sce_SC1_qc)$HCC827_prop[i] <- colData(sce_SC1_qc)$HCC827[i] / 9
 }
   
-for (i in 1:nrow(sce_SC2_qc@colData)) {
+for (i in seq_along(nrow(sce_SC2_qc@colData))) {
   colData(sce_SC2_qc)$H2228_prop[i] <- colData(sce_SC2_qc)$H2228[i] / 9
   colData(sce_SC2_qc)$H1975_prop[i] <- colData(sce_SC2_qc)$H1975[i] / 9
   colData(sce_SC2_qc)$HCC827_prop[i] <- colData(sce_SC2_qc)$HCC827[i] / 9
 }
   
-for (i in 1:nrow(sce_SC3_qc@colData)) {
+for (i in seq_along(nrow(sce_SC3_qc@colData))) {
   colData(sce_SC3_qc)$H2228_prop[i] <- colData(sce_SC3_qc)$H2228[i] / 9
   colData(sce_SC3_qc)$H1975_prop[i] <- colData(sce_SC3_qc)$H1975[i] / 9
   colData(sce_SC3_qc)$HCC827_prop[i] <- colData(sce_SC3_qc)$HCC827[i] / 9
 }
   
-
 
 colData(sce_SC1_qc)$group = paste("clu",colData(sce_SC1_qc)$H2228_prop,colData(sce_SC1_qc)$H1975_prop,colData(sce_SC1_qc)$HCC827_prop,sep="_")
 col1 <- rgb(sce_SC1_qc$H1975_prop, sce_SC1_qc$HCC827_prop, sce_SC1_qc$H2228_prop,alpha=0.9)
@@ -238,7 +236,7 @@ col4 <- rgb(sce_SC4_qc$H1975_prop, sce_SC4_qc$HCC827_prop, sce_SC4_qc$H2228_prop
 
 
 sc1PCA <- ggplot(data=as.data.frame(reducedDim(sce_SC1_qc,"PCA")),aes(x=PC1,y=PC2,col=sce_SC1_qc$group))+
-  geom_point(size=1.2,show.legend = F,alpha=0.7)+
+  geom_point(size=1.2, show.legend = FALSE, alpha=0.7)+
   scale_color_manual(guide=FALSE, values = unique(col1), limits = unique(sce_SC1_qc$group))+
   theme(text = element_text(size=10),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
 panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -248,8 +246,8 @@ axis.text.y=element_blank(),
         axis.ticks.y=element_blank()) +
   ggtitle("PCA Cell Mix 1")
 
-sc2PCA <- ggplot(data=as.data.frame(reducedDim(sce_SC2_qc,"PCA")),aes(x=PC1,y=PC2,col=sce_SC2_qc$group))+
-  geom_point(size=1.2,show.legend = F,alpha=0.7)+
+sc2PCA <- ggplot(data=as.data.frame(reducedDim(sce_SC2_qc,"PCA")), aes(x=PC1,y=PC2,col=sce_SC2_qc$group))+
+  geom_point(size=1.2, show.legend = FALSE, alpha=0.7)+
   scale_color_manual(guide=FALSE,values = unique(col2), limits = unique(sce_SC2_qc$group))+
   theme(text = element_text(size=10),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
 panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -260,7 +258,7 @@ axis.text.y=element_blank(),
   ggtitle("PCA Cell Mix 2")
 
 sc3PCA <- ggplot(data=as.data.frame(reducedDim(sce_SC3_qc,"PCA")),aes(x=PC1,y=PC2,col=sce_SC3_qc$group))+
-  geom_point(size=1.2,show.legend = F,alpha=0.7)+
+  geom_point(size=1.2, show.legend = FALSE, alpha=0.7)+
   scale_color_manual(guide=FALSE,values = unique(col3), limits = unique(sce_SC3_qc$group))+
   theme(text = element_text(size=10),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
 panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -272,7 +270,7 @@ axis.text.y=element_blank(),
 
 
 sc4PCA <- ggplot(data=as.data.frame(reducedDim(sce_SC4_qc,"PCA")),aes(x=PC1,y=PC2,col=sce_SC4_qc$group))+
-  geom_point(size= 1.2,show.legend = F,alpha=0.7)+
+  geom_point(size= 1.2, show.legend = FALSE, alpha=0.7)+
   scale_color_manual(guide=FALSE,values = unique(col4), limits = unique(sce_SC4_qc$group))+
   theme(text = element_text(size=10),panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
 panel.background = element_blank(), axis.line = element_line(colour = "black"),

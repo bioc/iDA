@@ -17,11 +17,20 @@ values less than or equal to this will be set to 0 and removed from the SNN
 graph. Essentially sets the strigency of pruning (0 --- no pruning, 1 ---
 prune everything).}
 
-\item{set.seed}{(numeric or FALSE) seed random number generator before building KNN graph}
+\item{set.seed}{(numeric or FALSE) seed random number generator before 
+building KNN graph}
 }
 \value{
 The SNN graph (igraph object)
 }
 \description{
-Calculate k-nearest neighbors and construct a shared nearest neighbor (SNN) graph.
+Calculate k-nearest neighbors and construct a shared nearest neighbor 
+(SNN) graph.
+}
+\examples{
+data("sc_sample_data")
+sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
+logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
+snn <- iDA::getSNN(data.use = logcounts(sce))
+
 }

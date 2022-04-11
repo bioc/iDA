@@ -17,59 +17,60 @@ library(iDA)
 library(DESeq2)
 library(patchwork)
 library(clValid)
+library(dplyr)
+library(textshape)
 ```
 
 # Pheno Data
 ```{r}
+destfile <- "E-GEUV-3.sdrf.txt"
+download.file(url = "https://www.ebi.ac.uk/arrayexpress/files/E-GEUV-3/E-GEUV-3.sdrf.txt", destfile = destfile)
+
 #pheno data
 unduped_samples = read.csv("~/Desktop/iDA_bioc/data/sampleids.csv")
-coldata <- read.csv("~/Desktop/iDA_bioc/data/E-GEUV-3.sdrf.csv",  header = TRUE, row.names = "AssayName")
-coldata = coldata[unduped_samples$x,]
-coldata_pop_lab = coldata[,c(2,6)]
+coldata <- read.delim("E-GEUV-3.sdrf.txt", header = TRUE)
+coldata <- coldata %>%
+  select(Factor.Value.population., Factor.Value.laboratory., Assay.Name) %>%
+  unique() 
+
+rownames(coldata) <- coldata$Assay.Name
+head(coldata)
+colnames(coldata) <- c("Population", "Laboratory", "AssayName")
+#coldata = coldata[unduped_samples$x,]
+#coldata_pop_lab = coldata[,c(2,6)]
 ```
 
 # Geuvadis (GVD) expression and phenotype data
 
 Geuvadis data can be downloaded from here:
-https://www.ebi.ac.uk/arrayexpress/experiments/E-GEUV-1/files/analysis_results/?ref=E-GEUV-1
+https://www.ebi.ac.uk/arrayexpress/experiments/E-GEUV-3/files/analysis_results/?ref=E-GEUV-3
 ```{r}
 #read in data table
-GVD_raw <- read.table("~/Desktop/iDA_bioc/data/GD660.GeneQuantCount.txt", header = TRUE, row.names = "Gene_Symbol")
-
+GVD_raw <- read.table("~/Downloads/GD660.GeneQuantCount.txt", header = TRUE, row.names = "Gene_Symbol")
 #subset columns for sample counts and remove duplicate samples
-GVD_raw <- data.matrix(GVD_raw[,4:663])
+GVD_raw <- GVD_raw[, colnames(GVD_raw) %in% coldata$Assay.Name]
 samples <- colnames(GVD_raw)
-#samples <- strsplit(samples, ".", fixed = TRUE)
-#samples <- do.call(rbind, samples)[,1]
-#colnames(GVD_raw) <- samples
 GVD_raw <- GVD_raw[, !duplicated(colnames(GVD_raw))]
 
 #rounded count values because Array Express uses an EM algorithm for alignment and can result in non-integer counts. Deseq requires integer values
 GVD_raw <- round(GVD_raw)
-GVD_raw <- GVD_raw[,rownames(coldata)]
+
+#GVD_raw <- GVD_raw[,rownames(coldata)]
 
 #check if order of rows and cols are the same
+coldata <- coldata[colnames(GVD_raw),]
 all(rownames(coldata) %in% colnames(GVD_raw))
 all(rownames(coldata) == colnames(GVD_raw))
 
 dds <- DESeqDataSetFromMatrix(countData = GVD_raw,
                               colData = coldata, design = ~ Population)
-
-#get rid of low count genes
-keep <- rowSums(counts(dds)) >= 10
-dds <- dds[keep,]
-#normalize counts
-dds <- estimateSizeFactors(dds)
-normalized_counts <- counts(dds, normalized=TRUE)
-#variance stabilizing transformation
-vsc_dds <- assay(varianceStabilizingTransformation(dds, blind = TRUE))
 ```
 
 
 # Run iDA on GVD varianceStabilizedTransformation data
 ```{r}
 #run iDA
-GVDvst_iDA_disp1 <- iDA(vsc_dds, NormCounts = vsc_dds, set.seed = 11, var.Features = "disp")
+dds <- iDA(dds, set.seed = 11)
 
 #save iDA embedding and idents
 GVDvst_iDA_disp1_ident = GVDvst_iDA_disp1[[1]]

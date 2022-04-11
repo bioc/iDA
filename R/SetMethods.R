@@ -11,91 +11,147 @@ setGeneric("iDA", signature=c("object"),
 #'
 #' @param object The object to run iDA on
 #' @param scaled Is the input matrix normalized and scaled already?
+#' @param mean.low.cutoff  (numeric) Bottom cutoff on mean for identifying 
+#' variable genes, passed to function [`VariableGenesGeneric`]
+#' @param mean.high.cutoff (numeric) Top cutoff on mean for identifying variable
+#' genes (passed to [`VariableGenesGeneric`])
+#' @param dispersion.cutoff (numeric) Bottom cutoff on dispersion for 
+#' identifying variable genes (passed to [`VariableGenesGeneric`])
 #' @param ... Additonal arguments passed to object constructors
 #' @return iDA output with clustering, gene weights, and cell weights
 #' @export
 setMethod("iDA", "matrix",
-          function(object, scaled, ...) {
+          function(object, 
+                   scaled = FALSE,  
+                   mean.low.cutoff = 0.1,
+                   mean.high.cutoff = 8,
+                   dispersion.cutoff = 1, ...) {
             if (scaled == FALSE){
               message("scaled = FALSE. Normalizing and scaling matrix now.")
-              data.use.norm <- Matrix::t((Matrix::t(object)/ Matrix::colSums(object))* 10000)
+              data.use.norm <- t((t(object)/colSums(object))* 10000)
               data.use.norm <- log1p(data.use.norm)
-              data.use <- scale(data.use.norm)
+              scale.data <- scale(data.use.norm)
             }
-            iDAoutput <- iDA_core(data.use, scaled = TRUE, ...)
+            
+            var.features <- VariableGenesGeneric(data.use.norm, 
+                                          dispersion.cutoff = dispersion.cutoff, 
+                                          mean.low.cutoff = mean.low.cutoff, 
+                                          mean.high.cutoff = mean.high.cutoff)[["var.features"]]
+            var.data <- scale.data[var.features,]
+            iDAoutput <- iDA_core(var.data, ...)
             return(iDAoutput)
           })
+
+
+#' Set method for DESeqDataSet to input data to iDA
+#'
+#' @param object The object to run iDA on
+#' @param ... Additonal arguments passed to object constructors
+#' @return iDA output with clustering, gene weights, and cell weights
+#' @import DESeq2
+#' @importFrom SummarizedExperiment assay rowData colData
+#' @importFrom genefilter rowVars
+#' @importFrom utils head
+#' @export
+setMethod("iDA", "DESeqDataSet",
+          function(object, ...) {
+            # Filtering counts < 10
+            keep <- rowSums(counts(object)) >= 10
+            object <- object[keep,]
+            #normalize counts
+            object <- estimateSizeFactors(object)
+            #variance stabilizing transformation
+            message("Transforming counts with vst().")
+            scale.data <- assay(vst(object, blind = TRUE))
+            rowvars <- rowVars(scale.data)
+            topVarGenes <- names(head(rowvars[order(-rowvars)], n = 2000))
+            message(length(topVarGenes), 
+                    " variable features found using rowVars(). \n")
+            var.data <- scale.data[topVarGenes,]
+            iDAoutput <- iDA_core(var.data, ...)
+            #add metadata back to object
+            if (all(rownames(colData(object)) == rownames(iDAoutput$LDs))) {
+              colData(object) <- cbind(colData(object), 
+                                       iDAoutput$LDs, 
+                                       iDAoutput$clusters)
+            }
+            return(object)
+          })
+
 
 #' Method for SingleCellExperiment object to input data to iDA
 #'
 #' @param object The single cell experiment object to run iDA on
-#' @param selection.method The method to use for finding variable features
 #' @param ... Additonal arguments passed to object constructors
 #' @import  SingleCellExperiment 
 #' @importFrom SummarizedExperiment assays
 #' @importFrom scuttle normalizeCounts
-#' @return SingleCellExperiment object with iDA cell weights and gene weights stored in reducedDims and cluster assignemts
+#' @return SingleCellExperiment object with iDA cell weights and gene weights 
+#' stored in reducedDims and cluster assignemts
 #' stored in rowLabels
 #' @export
 setMethod("iDA", "SingleCellExperiment",
-          function(object, selection.method = "scran", ...) {
-              if (!('logcounts' %in% names(assays(object)))){
-                logcounts(object) <- normalizeCounts(object,  size.factors = sizeFactors(object))
-              }
-              normcounts <-  logcounts(object)
-              
-              if (selection.method == "scran") {
-                if (nrow(normcounts) < 3000) {
-                  var.features <- rownames(normcounts)
-                } else {
-                  stats <- scran::modelGeneVar(normcounts)
-                  var.features <- scran::getTopHVGs(stats, n = 3000)
-                }
-              }
-              
-              iDA_sce <- iDA_core(normcounts, NormCounts = normcounts, var.features = var.features, scaled = TRUE, ...)
-              reducedDims(object) <- list(iDAcellweights = iDA_sce[[2]])
-              colLabels(object) <- list(iDAclusters = iDA_sce[[1]])
-              #rowData(object[iDA_sce[[4]],]) <- list(iDAgeneweights = iDA_sce[[3]])
-              return(object)
+          function(object, ...) {
+            if (!('logcounts' %in% names(assays(object)))){
+              logcounts(object) <- normalizeCounts(object,  
+                                            size.factors = sizeFactors(object))
+            }
+            normcounts <-  logcounts(object)
+            if (nrow(normcounts) < 2000) {
+              var.features <- rownames(normcounts)
+            } else {
+              stats <- modelGeneVar(normcounts)
+              var.features <- getTopHVGs(stats, n = 2000)
+            }
+            message(length(var.features), 
+                    " variable features found using scran::getTopHVGs. \n")
+            
+            var.data <- normcounts[var.features, ]
+            
+            iDA_sce <- iDA_core(var.data, ...)
+            reducedDims(object) <- list(iDAcellweights = iDA_sce[["LDs"]])
+            colLabels(object) <- list(iDAclusters = iDA_sce[["clusters"]])
+            return(object)
           })
 
 #' Method for Seurat object to input data to iDA
 #'
 #' @param object The single cell experiment object to run iDA on
 #' @param assay The assay to take counts from
-#' @param selection.method The Seurat method to use for variable feature selection. 
+#' @param selection.method The Seurat method to use for variable feature 
+#' selection. 
 #' @param ... Additional arguments passed to object constructors
 #' @import Seurat Seurat
-#' @return Seurat object with iDA cell weights and gene weights stored in object[["iDA"]] and cluster assignments stored in rowLabels
+#' @return Seurat object with iDA cell weights and gene weights stored in 
+#' object[["iDA"]] and cluster assignments stored in rowLabels
 #' @export
-
 setMethod("iDA", "Seurat",
-          function(object, assay, selection.method = "vst", ...) {
+          function(object, assay, selection.method = "dispersion", ...) {
             if (length(GetAssayData(object, slot = "scale.data")) == 0){
               object <- NormalizeData(object, 
                                       normalization.method = "LogNormalize", 
                                       scale.factor = 10000) #normalize data
               object <- ScaleData(object) #center and scale
-              counts <- GetAssayData(object, slot = "scale.data") 
-              normCounts <- GetAssayData(object, slot = "data") 
+              scale.data <- GetAssayData(object, slot = "scale.data") 
             } else {
-              counts <- GetAssayData(object, slot = "scale.data") 
-              normCounts <- GetAssayData(object, slot = "data") 
+              scale.data <- GetAssayData(object, slot = "scale.data") 
             }
             
             if (length(VariableFeatures(object)) == 0) {
-              object <- FindVariableFeatures(object, selection.method = selection.method)
+              object <- FindVariableFeatures(object, 
+                                          selection.method = selection.method)
             }
             var.features <- VariableFeatures(object)
-            iDA_seurat <- iDA_core(counts, NormCounts = normCounts, scaled = TRUE, var.features = var.features, ...)
-
-            object[["iDA"]] <- CreateDimReducObject(embeddings = as.matrix(iDA_seurat[[2]]),
-                                                    key = "LD_",
-                                                    loadings = as.matrix(iDA_seurat[[3]]),
-                                                    assay = assay)
-            
-            object <- AddMetaData(object = object, metadata = iDA_seurat[[1]], col.name = "iDA_clust")
-            object[[assay]]@var.features <- iDA_seurat[[4]]
+            message(length(var.features), 
+                    " variable features found using FindVariableFeatures(). \n")
+            var.data <- scale.data[var.features,]
+            iDA_seurat <- iDA_core(var.data, ...)
+            object[["iDA"]] <- CreateDimReducObject(embeddings = as.matrix(iDA_seurat[["LDs"]]),
+                          key = "LD_",
+                          loadings = as.matrix(iDA_seurat[["feature_weights"]]),
+                          assay = assay)
+            object <- AddMetaData(object = object, 
+                                  metadata = iDA_seurat[["clusters"]], 
+                                  col.name = "iDA_clust")
             return(object)
           })

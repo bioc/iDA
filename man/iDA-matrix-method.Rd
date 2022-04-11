@@ -4,12 +4,28 @@
 \alias{iDA,matrix-method}
 \title{Set method for matrix to input data to iDA}
 \usage{
-\S4method{iDA}{matrix}(object, scaled, ...)
+\S4method{iDA}{matrix}(
+  object,
+  scaled = FALSE,
+  mean.low.cutoff = 0.1,
+  mean.high.cutoff = 8,
+  dispersion.cutoff = 1,
+  ...
+)
 }
 \arguments{
 \item{object}{The object to run iDA on}
 
 \item{scaled}{Is the input matrix normalized and scaled already?}
+
+\item{mean.low.cutoff}{(numeric) Bottom cutoff on mean for identifying 
+variable genes, passed to function [`VariableGenesGeneric`]}
+
+\item{mean.high.cutoff}{(numeric) Top cutoff on mean for identifying variable
+genes (passed to [`VariableGenesGeneric`])}
+
+\item{dispersion.cutoff}{(numeric) Bottom cutoff on dispersion for 
+identifying variable genes (passed to [`VariableGenesGeneric`])}
 
 \item{...}{Additonal arguments passed to object constructors}
 }

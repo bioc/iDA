@@ -5,14 +5,7 @@
 \title{Find embedding space using iterative LDA}
 \usage{
 iDA_core(
-  data.use,
-  NormCounts = NULL,
-  scaled = FALSE,
-  Feature.selection.method = "scran",
-  var.features = NULL,
-  mean.low.cutoff = 0.1,
-  mean.high.cutoff = 8,
-  dispersion.cutoff = 1,
+  var.data,
   k.param = 10,
   prune.SNN = 1/15,
   dims.use = 10,
@@ -23,31 +16,11 @@ iDA_core(
 )
 }
 \arguments{
-\item{data.use}{(matrix) A matrix of raw count data to find embedding for. 
-(sample x feature)}
+\item{var.data}{(matrix) A matrix of scaled count data for variable genes 
+to find embedding for. (sample x variable features)}
 
-\item{NormCounts}{(matrix) A matrix of normalized and scaled count 
-data to find embedding for. (sample x feature)}
-
-\item{scaled}{(boolean) An indicator of if the data has already been normalized
-and scaled.}
-
-\item{Feature.selection.method}{Which method to use when finding variable features}
-
-\item{var.features}{(character) A character list of var.features which are in
-the townames of the data.use matrix}
-
-\item{mean.low.cutoff}{(numeric) Bottom cutoff on mean for identifying variable
-genes, passed to function [`VariableGenes`]}
-
-\item{mean.high.cutoff}{(numeric) Top cutoff on mean for identifying variable genes 
-(passed to [`VariableGenes`])}
-
-\item{dispersion.cutoff}{(numeric) Bottom cutoff on dispersion for identifying 
-variable genes (passed to [`VariableGenes`])}
-
-\item{k.param}{(numeric) Defines k for the k-nearest neighbor algorithm (passed 
-to [`getSNN`])}
+\item{k.param}{(numeric) Defines k for the k-nearest neighbor algorithm 
+(passed to [`getSNN`])}
 
 \item{prune.SNN}{(numeric) Sets the cutoff for acceptable Jaccard index when
 computing the neighborhood overlap for the SNN construction. Any edges with
@@ -55,16 +28,18 @@ values less than or equal to this will be set to 0 and removed from the SNN
 graph. Essentially sets the strigency of pruning (0 --- no pruning, 1 ---
 prune everything). Passed to [`getSNN`]}
 
-\item{dims.use}{(numeric) A vector of the dimensions to use in construction of the SNN
-graph (e.g. To use the first 10 PCs, pass 1:10) (passed to [`getSNN`])}
-
-\item{diag}{Diagonalize the within class scatter matrix (assume the features are independent
-within each cluster)}
-
-\item{set.seed}{(numeric or FALSE) seed random number generator before building KNN graph.
+\item{dims.use}{(numeric) A vector of the dimensions to use in construction 
+of the SNN graph (e.g. To use the first 10 PCs, pass 1:10) 
 (passed to [`getSNN`])}
 
-\item{c.param}{(numeric) Defines the number of desired clusters to be found in the embedding}
+\item{diag}{Diagonalize the within class scatter matrix (assume the features
+are independent within each cluster)}
+
+\item{set.seed}{(numeric or FALSE) seed random number generator before
+building KNN graph. (passed to [`getSNN`])}
+
+\item{c.param}{(numeric) Defines the number of desired clusters to be found
+in the embedding}
 
 \item{cluster.method}{What clustering method to use}
 }

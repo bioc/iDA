@@ -22,19 +22,23 @@ library(clValid)
 library(caret)
 library(Rtsne)
 library(umap)
+library(R.utils)
 ```
 
 
 # Load the PBMC dataset
 The 3k cell PBMC dataset can be downloaded from here:
 
-https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz"
+https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz
 
 
 ```{r}
-pbmc.data <- Read10X(data.dir = "~/Desktop/iDA_bioc/data/filtered_gene_bc_matrices/hg19/")
-# Initialize the Seurat object with the raw (non-normalized data).
-pbmc <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k", min.cells = 3, min.features = 200)
+destfile = "pbmc3k_filtered_gene_bc_matrices.tar.gz"
+download.file(url = "https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz", destfile = destfile) #download file and write to destfile
+untar(destfile) #untar file
+
+pbmc.data <- Read10X(data.dir = "filtered_gene_bc_matrices/hg19/")
+pbmc <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k", min.cells = 3, min.features = 200) # Initialize the Seurat object with the raw (non-normalized data)
 
 pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
 pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
@@ -43,10 +47,18 @@ pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor 
 pbmc <- ScaleData(pbmc)
 ```
 
+
+```{r}
+unlink("filtered_gene_bc_matrices", recursive = TRUE)
+unlink("pbmc3k_filtered_gene_bc_matrices.tar.gz")
+```
+
 # iDA
 ```{r}
 #run iDA
-pbmc <- iDA(pbmc, assay = "RNA", set.seed = 11, diag = TRUE)
+pbmc <- iDA(pbmc, assay = "RNA", set.seed = 11)
+
+pbmc <- Seurat::FindVariableFeatures(pbmc, selection.method = "dispersion")
 ```
 
 

@@ -4,19 +4,21 @@
 \alias{iDA,Seurat-method}
 \title{Method for Seurat object to input data to iDA}
 \usage{
-\S4method{iDA}{Seurat}(object, assay, selection.method = "vst", ...)
+\S4method{iDA}{Seurat}(object, assay, selection.method = "dispersion", ...)
 }
 \arguments{
 \item{object}{The single cell experiment object to run iDA on}
 
 \item{assay}{The assay to take counts from}
 
-\item{selection.method}{The Seurat method to use for variable feature selection.}
+\item{selection.method}{The Seurat method to use for variable feature 
+selection.}
 
 \item{...}{Additional arguments passed to object constructors}
 }
 \value{
-Seurat object with iDA cell weights and gene weights stored in object[["iDA"]] and cluster assignments stored in rowLabels
+Seurat object with iDA cell weights and gene weights stored in 
+object[["iDA"]] and cluster assignments stored in rowLabels
 }
 \description{
 Method for Seurat object to input data to iDA
