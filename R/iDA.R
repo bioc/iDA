@@ -52,11 +52,11 @@ iDA_core <- function(var.data,
     } else if (cluster.method == "kmeans"){
         kmeansclusters <- kmeans(transformed, centers = c.param)
         clusters <- cbind(start = rep(1,dim(transformed)[1]), 
-                          currentclust = kmeansclusters$cluster)
+                            currentclust = kmeansclusters$cluster)
     } else if (cluster.method == "walktrap"){
         snn <- getSNN(data.use = transformed, 
-                          k.param = k.param, 
-                          prune.SNN = prune.SNN)
+                            k.param = k.param, 
+                            prune.SNN = prune.SNN)
         walktrapClusters <- cluster_walktrap(snn)
       }
       #pick highest modularity
@@ -64,8 +64,8 @@ iDA_core <- function(var.data,
         modularity <- c(0)
         for (i in 2:15){
           modularity <- c(modularity, modularity(snn, 
-                                                cut_at(walktrapClusters, 
-                                                no = i)))
+                                                 cut_at(walktrapClusters, 
+                                                 no = i)))
         }
         maxmodclust <- cut_at(walktrapClusters, no = which.max(modularity))
         clusters <- as.data.frame(cbind(start = rep(1,nrow(transformed)), 
