@@ -21,9 +21,9 @@
 #' @return (character) a list of row names with high dispersion rows
 #' @export
 VariableGenesGeneric <- function(NormCounts,
-                                 dispersion.cutoff = 1,
-                                 mean.low.cutoff = 0.1,
-                                 mean.high.cutoff = 8) {
+                                dispersion.cutoff = 1,
+                                mean.low.cutoff = 0.1,
+                                mean.high.cutoff = 8) {
   ## calculate logged means and VMR
   ExpMeans <- apply(NormCounts, 1, FUN = function(x) log(mean(exp(x) - 1) + 1))
   finite_idx <- is.finite(ExpMeans)
@@ -174,8 +174,8 @@ BCS <- function(splitclusters) {
 #' 
 #' @return returns the between class scatter matrix
 decomposeSVD <- function(WCSmat,
-                         BCSmat,
-                         nu = 10) {
+                          BCSmat,
+                          nu = 10) {
   svd <- svd(solve(WCSmat) %*% BCSmat, nu)
   top_eigenvectors <- svd$u[, seq(nu)]
   top_eigenvalues <- svd$d[seq(nu)]
@@ -206,11 +206,10 @@ decomposeSVD <- function(WCSmat,
 #' 
 #' @return The SNN graph (igraph object)
 getSNN <- function(data.use,
-                   k.param = 10,
-                   prune.SNN = 1/15) {
+                    k.param = 10,
+                    prune.SNN = 1/15) {
   data.use <- as.matrix(data.use)
   n.obs <- nrow(x = data.use)
-  
   if (n.obs < k.param) {
     warning("k.param set larger than number of cells. 
             Setting k.param to number of cells - 1.",
@@ -223,8 +222,8 @@ getSNN <- function(data.use,
     rownames(x = snn.matrix) <- rownames(x = data.use)
     colnames(x = snn.matrix) <- rownames(x = data.use)
     snn.graph <- graph_from_adjacency_matrix(snn.matrix, 
-                                             weighted = TRUE, 
-                                             mode = "undirected")
+                                              weighted = TRUE, 
+                                              mode = "undirected")
     return(snn.graph)
 }
 

@@ -10,7 +10,7 @@
 #' @return iDA output with clustering, gene weights, and cell weights
 #' @export
 setGeneric("iDA", signature=c("object"),
-           function(object, ...) standardGeneric("iDA"))
+            function(object, ...) standardGeneric("iDA"))
 
 #' Set method for matrix to input data to iDA
 #'
@@ -26,16 +26,16 @@ setGeneric("iDA", signature=c("object"),
 #' @return iDA output with clustering, gene weights, and cell weights
 #' @export
 setMethod("iDA", "matrix",
-          function(object, 
-                   scaled = FALSE,  
-                   mean.low.cutoff = 0.1,
-                   mean.high.cutoff = 8,
-                   dispersion.cutoff = 1, ...) {
+            function(object, 
+                    scaled = FALSE,  
+                    mean.low.cutoff = 0.1,
+                    mean.high.cutoff = 8,
+                    dispersion.cutoff = 1, ...) {
             if (scaled == FALSE){
-              message("scaled = FALSE. Normalizing and scaling matrix now.")
-              data.use.norm <- t((t(object)/colSums(object))* 10000)
-              data.use.norm <- log1p(data.use.norm)
-              scale.data <- scale(data.use.norm)
+                message("scaled = FALSE. Normalizing and scaling matrix now.")
+                data.use.norm <- t((t(object)/colSums(object))* 10000)
+                data.use.norm <- log1p(data.use.norm)
+                scale.data <- scale(data.use.norm)
             }
             
             var.features <- VariableGenesGeneric(data.use.norm, 
@@ -46,7 +46,6 @@ setMethod("iDA", "matrix",
             iDAoutput <- iDA_core(var.data, ...)
             return(iDAoutput)
           })
-
 
 #' Set method for DESeqDataSet to input data to iDA
 #'
@@ -76,9 +75,9 @@ setMethod("iDA", "DESeqDataSet",
             iDAoutput <- iDA_core(var.data, ...)
             #add metadata back to object
             if (all(rownames(colData(object)) == rownames(iDAoutput$LDs))) {
-              colData(object) <- cbind(colData(object), 
-                                       iDAoutput$LDs, 
-                                       iDAoutput$clusters)
+                colData(object) <- cbind(colData(object), 
+                                        iDAoutput$LDs, 
+                                        iDAoutput$clusters)
             }
             return(object)
           })
@@ -96,23 +95,22 @@ setMethod("iDA", "DESeqDataSet",
 #' stored in rowLabels
 #' @export
 setMethod("iDA", "SingleCellExperiment",
-          function(object, ...) {
-            if (!('logcounts' %in% names(assays(object)))){
-              logcounts(object) <- normalizeCounts(object,  
+            function(object, ...) {
+              if (!('logcounts' %in% names(assays(object)))){
+                logcounts(object) <- normalizeCounts(object,  
                                             size.factors = sizeFactors(object))
-            }
+              }
             normcounts <-  logcounts(object)
             if (nrow(normcounts) < 2000) {
-              var.features <- rownames(normcounts)
+                var.features <- rownames(normcounts)
             } else {
-              stats <- modelGeneVar(normcounts)
-              var.features <- getTopHVGs(stats, n = 2000)
+                stats <- modelGeneVar(normcounts)
+                var.features <- getTopHVGs(stats, n = 2000)
             }
             message(length(var.features), 
                     " variable features found using scran::getTopHVGs. \n")
             
             var.data <- normcounts[var.features, ]
-            
             iDA_sce <- iDA_core(var.data, ...)
             reducedDims(object) <- list(iDAcellweights = iDA_sce[["LDs"]])
             colLabels(object) <- list(iDAclusters = iDA_sce[["clusters"]])
@@ -143,7 +141,7 @@ setMethod("iDA", "Seurat",
             }
             if (length(VariableFeatures(object)) == 0) {
               object <- FindVariableFeatures(object, 
-                                          selection.method = selection.method)
+                                            selection.method = selection.method)
             }
             var.features <- VariableFeatures(object)
             message(length(var.features), 
