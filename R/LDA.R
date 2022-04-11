@@ -13,10 +13,10 @@
 #'  this cutoff
 #' @importFrom stats sd var
 #' @examples
-#' data("sc_sample_data")
-#' sce <- SingleCellExperiment(list(counts = as.matrix(sc_sample_data)))
-#' logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
-#' var.features <- iDA::VariableGenesGeneric(logcounts(sce))
+# data("sc_sample_data")
+# sce <- SingleCellExperiment(list(counts = as.matrix(sc_sample_data)))
+# logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
+# var.features <- iDA::VariableGenesGeneric(logcounts(sce))
 #'
 #' @return (character) a list of row names with high dispersion rows
 #' @export
@@ -67,10 +67,10 @@ VariableGenesGeneric <- function(NormCounts,
 #'  zeroed
 #' @importFrom dplyr select
 #' @examples
-#' data(iris)
-#' iris_input <- dplyr::select(iris, -c("Species"))
-#' sp_dfs <- split(iris_input, f = iris$Species)
-#' wcs_mat <- iDA::WCS(sp_dfs, diag = TRUE)
+# data(iris)
+# iris_input <- dplyr::select(iris, -c("Species"))
+# sp_dfs <- split(iris_input, f = iris$Species)
+# wcs_mat <- iDA::WCS(sp_dfs, diag = TRUE)
 #' 
 #' @return returns the within class scatter matrix
 WCS <- function(splitclusters, diag = FALSE) {
@@ -86,7 +86,7 @@ WCS <- function(splitclusters, diag = FALSE) {
   wcsm <- c()
   k <- 1
   for (i in splitclusters) {
-    dataMatrix <- t(i[, 1:length(i)])
+    dataMatrix <- t(i)
     wcsm[[k]] <- (t(t(dataMatrix) - clustermeans[[k]])) %*% (t(dataMatrix) - clustermeans[[k]])
     k <- k + 1
   }
@@ -118,10 +118,10 @@ WCS <- function(splitclusters, diag = FALSE) {
 #' scaled data from each cluster
 #' @importFrom dplyr select
 #' @examples
-#' data(iris)
-#' iris_input <- dplyr::select(iris, -c("Species"))
-#' sp_dfs <- split(iris_input, f = iris$Species)
-#' bcs_mat <- BCS(sp_dfs)
+# data(iris)
+# iris_input <- dplyr::select(iris, -c("Species"))
+# sp_dfs <- split(iris_input, f = iris$Species)
+# bcs_mat <- BCS(sp_dfs)
 #' 
 #' @return returns the between class scatter matrix
 BCS <- function(splitclusters) {
@@ -129,28 +129,21 @@ BCS <- function(splitclusters) {
   clustermeans <- c()
   k <- 1
   for (i in splitclusters) {
-    clustermeans[[k]] <- colMeans(i[,1:(length(i))])
-    #clustermeans[[k]] <- colMeans(i[,seq_along(i)])
+    clustermeans[[k]] <- colMeans(i)
     k <- k + 1
   }
-  
   ## calculate overallMeans for each feature
   overallMeanVector <- c()
-  for (i in 1:length(clustermeans[[1]])) {
-    #for (i in seq_along(clustermeans[[1]])) {
+  for (i in seq_along(clustermeans[[1]])) {
     overallMeanVector[[i]] <- mean(vapply(clustermeans, 
                                           function(l) l[[i]], 
                                           FUN.VALUE = 0))
-  }
-  
+    }
   ## calculate each btsc matrix per cluster
   btsc <- c()
-  
-  for (i in 1:length(clustermeans)) {
-    #for (i in seq_along(clustermeans)) { #1:length(clustermeans)) {
+  for (i in seq_along(clustermeans)) {
     btsc[[i]] <- ((clustermeans[[i]] - unlist(overallMeanVector)) %*%
                     t(clustermeans[[i]] - unlist(overallMeanVector)))
-    ## * length(rownames(splitclusters[[1]]))
   }
   
   ## add all btsc's together
@@ -172,22 +165,20 @@ BCS <- function(splitclusters) {
 #' @param nu The number of columns (eigenvectors) to keep 
 #' @importFrom dplyr select
 #' @examples 
-#' data(iris)
-#' iris_input <- dplyr::select(iris, -c("Species"))
-#' sp_dfs <- split(iris_input, f = iris$Species)
-#' wcs_mat <- iDA::WCS(sp_dfs, diag = TRUE)
-#' bcs_mat <- iDA::BCS(sp_dfs)
-#' LDA_decomp <- iDA::decomposeSVD(WCSmat = wcs_mat, BCSmat = bcs_mat)
+# data(iris)
+# iris_input <- dplyr::select(iris, -c("Species"))
+# sp_dfs <- split(iris_input, f = iris$Species)
+# wcs_mat <- iDA::WCS(sp_dfs, diag = TRUE)
+# bcs_mat <- iDA::BCS(sp_dfs)
+# LDA_decomp <- iDA::decomposeSVD(WCSmat = wcs_mat, BCSmat = bcs_mat)
 #' 
 #' @return returns the between class scatter matrix
 decomposeSVD <- function(WCSmat,
                          BCSmat,
                          nu = 10) {
   svd <- svd(solve(WCSmat) %*% BCSmat, nu)
-  top_eigenvectors <- svd$u[, 1:nu]
-  top_eigenvalues <- svd$d[1:nu]
-  #top_eigenvectors <- svd$u[, seq_along(nu)] 
-  #top_eigenvalues <- svd$d[seq_along(nu)]
+  top_eigenvectors <- svd$u[, seq(nu)]
+  top_eigenvalues <- svd$d[seq(nu)]
   return(list(eigenvecs = top_eigenvectors, eigenvalues = top_eigenvalues))
 }
 
@@ -208,10 +199,10 @@ decomposeSVD <- function(WCSmat,
 #' @import igraph
 #' @import scran
 #' @examples 
-#' data("sc_sample_data")
-#' sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
-#' logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
-#' snn <- iDA::getSNN(data.use = logcounts(sce))
+# data("sc_sample_data")
+# sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
+# logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
+# snn <- iDA::getSNN(data.use = logcounts(sce))
 #' 
 #' @return The SNN graph (igraph object)
 getSNN <- function(data.use,
@@ -247,11 +238,11 @@ getSNN <- function(data.use,
 #' @param SNN a matrix of shared nearest neighbors (output from getSNN)
 #' @importFrom NetworkToolbox louvain
 #' @examples 
-#' data("sc_sample_data")
-#' sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
-#' logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
-#' snn <- iDA::getSNN(data.use = logcounts(sce))
-#' clusters <- iDA::getLouvain(snn)
+# data("sc_sample_data")
+# sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
+# logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
+# snn <- iDA::getSNN(data.use = logcounts(sce))
+# clusters <- iDA::getLouvain(snn)
 #' 
 #' @return a list of identities for clustering
 getLouvain <- function(SNN){

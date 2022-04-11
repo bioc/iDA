@@ -14,7 +14,7 @@
 #' graph. Essentially sets the strigency of pruning (0 --- no pruning, 1 ---
 #' prune everything). Passed to [`getSNN`]
 #' @param dims.use (numeric) A vector of the dimensions to use in construction 
-#' of the SNN graph (e.g. To use the first 10 PCs, pass 1:10) 
+#' of the SNN graph (e.g. To use the first 10 PCs, pass 10) 
 #' (passed to [`getSNN`])
 #' @param diag Diagonalize the within class scatter matrix (assume the features
 #' are independent within each cluster)
@@ -152,10 +152,10 @@ iDA_core <- function(var.data,
   }
   geneweights <- as.data.frame(eigenvecs)
   rownames(geneweights) <- rownames(var.data)
-  colnames(geneweights) <- paste("LD", 1:ncol(geneweights), sep = "")
+  colnames(geneweights) <- paste("LD", seq(ncol(geneweights)), sep = "")
   rownames(eigenvectransformed) <- rownames(transformed)
   colnames(eigenvectransformed) <- paste("LD", 
-                                        1:ncol(eigenvectransformed), 
+                                        seq(ncol(eigenvectransformed)), 
                                         sep = "")
   message("final concordance: ")
   message(concordance)

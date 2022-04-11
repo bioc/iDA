@@ -3,10 +3,10 @@
 #' @param object The object to run iDA on
 #' @param ... Additional arguments passed to object constructors
 #' @examples 
-#' data("sc_sample_data")
-#' sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
-#' set.seed(11)
-#' iDA(sce)
+# data("sc_sample_data")
+# sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
+# set.seed(11)
+# iDA(sce)
 #' @return iDA output with clustering, gene weights, and cell weights
 #' @export
 setGeneric("iDA", signature=c("object"),
