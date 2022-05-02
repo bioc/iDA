@@ -20,12 +20,3 @@ returns the between class scatter matrix
 Takes in within and between cluster covariance matrices (output from WCS
 and BSC) and returns the eigenvectors and eigenvalues for the decomp.
 }
-\examples{
-data(iris)
-iris_input <- dplyr::select(iris, -c("Species"))
-sp_dfs <- split(iris_input, f = iris$Species)
-wcs_mat <- iDA::WCS(sp_dfs, diag = TRUE)
-bcs_mat <- iDA::BCS(sp_dfs)
-LDA_decomp <- iDA::decomposeSVD(WCSmat = wcs_mat, BCSmat = bcs_mat)
-
-}

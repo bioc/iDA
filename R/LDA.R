@@ -12,14 +12,7 @@
 #' @param mean.high.cutoff (numeric) rows returned will have average lower than
 #'  this cutoff
 #' @importFrom stats sd var
-#' @examples
-#' data("sc_sample_data")
-#' sce <- SingleCellExperiment(list(counts = as.matrix(sc_sample_data)))
-#' logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
-#' var.features <- iDA:::VariableGenesGeneric(logcounts(sce))
-#'
 #' @return (character) a list of row names with high dispersion rows
-#' @export
 VariableGenesGeneric <- function(NormCounts,
                                  dispersion.cutoff = 1,
                                  mean.low.cutoff = 0.1,
@@ -65,12 +58,6 @@ VariableGenesGeneric <- function(NormCounts,
 #' @param diag if off diagonal entries in within class scatter matrix should be
 #'  zeroed
 #' @importFrom dplyr select
-#' @examples
-#' data(iris)
-#' iris_input <- dplyr::select(iris, -c("Species"))
-#' sp_dfs <- split(iris_input, f = iris$Species)
-#' wcs_mat <- iDA:::WCS(sp_dfs, diag = TRUE)
-#' 
 #' @return returns the within class scatter matrix
 WCS <- function(splitclusters, diag = FALSE) {
     ## calculate means vector for each cluster
@@ -116,12 +103,6 @@ WCS <- function(splitclusters, diag = FALSE) {
 #' @param splitclusters A list of dataframes (from the output of split()) with 
 #' scaled data from each cluster
 #' @importFrom dplyr select
-#' @examples
-# data(iris)
-# iris_input <- dplyr::select(iris, -c("Species"))
-# sp_dfs <- split(iris_input, f = iris$Species)
-# bcs_mat <- BCS(sp_dfs)
-#' 
 #' @return returns the between class scatter matrix
 BCS <- function(splitclusters) {
     ## calculate means vector for each cluster
@@ -163,14 +144,6 @@ BCS <- function(splitclusters) {
 #' @param BCSmat Output from BCS (matrix) of between class scatter 
 #' @param nu The number of columns (eigenvectors) to keep 
 #' @importFrom dplyr select
-#' @examples 
-# data(iris)
-# iris_input <- dplyr::select(iris, -c("Species"))
-# sp_dfs <- split(iris_input, f = iris$Species)
-# wcs_mat <- iDA::WCS(sp_dfs, diag = TRUE)
-# bcs_mat <- iDA::BCS(sp_dfs)
-# LDA_decomp <- iDA::decomposeSVD(WCSmat = wcs_mat, BCSmat = bcs_mat)
-#' 
 #' @return returns the between class scatter matrix
 decomposeSVD <- function(WCSmat,
                          BCSmat,
@@ -197,11 +170,6 @@ decomposeSVD <- function(WCSmat,
 #' building KNN graph
 #' @import igraph
 #' @import scran
-#' @examples 
-#' data("sc_sample_data")
-#' sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
-#' logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
-#' snn <- iDA:::getSNN(data.use = logcounts(sce))
 #' @return The SNN graph (igraph object)
 getSNN <- function(data.use,
                    k.param = 10,
@@ -234,13 +202,6 @@ getSNN <- function(data.use,
 #'
 #' @param SNN a matrix of shared nearest neighbors (output from getSNN)
 #' @importFrom NetworkToolbox louvain
-#' @examples 
-# data("sc_sample_data")
-# sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
-# logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
-# snn <- iDA::getSNN(data.use = logcounts(sce))
-# clusters <- iDA::getLouvain(snn)
-#' 
 #' @return a list of identities for clustering
 getLouvain <- function(SNN){
     louvain_clusters <- cluster_louvain(SNN)

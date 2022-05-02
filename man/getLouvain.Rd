@@ -18,11 +18,3 @@ optimization based clustering algorithm. Optimize the modularity function to
 determine clusters. For a full description of the algorithms, see Waltman and
 van Eck (2013) \emph{The European Physical Journal B}.
 }
-\examples{
-data("sc_sample_data")
-sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
-logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
-snn <- iDA::getSNN(data.use = logcounts(sce))
-clusters <- iDA::getLouvain(snn)
-
-}

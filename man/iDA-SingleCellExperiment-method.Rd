@@ -13,9 +13,15 @@
 }
 \value{
 SingleCellExperiment object with iDA cell weights and gene weights 
-stored in reducedDims and cluster assignemts
-stored in rowLabels
+stored in reducedDims and cluster assignments stored in rowLabels
 }
 \description{
 Method for SingleCellExperiment object to input data to iDA
+}
+\examples{
+data("sc_sample_data")
+sce <- SingleCellExperiment::SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
+set.seed(11)
+sce <- iDA(sce)
+
 }

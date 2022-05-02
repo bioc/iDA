@@ -9,11 +9,19 @@
 \arguments{
 \item{object}{The object to run iDA on}
 
-\item{...}{Additonal arguments passed to object constructors}
+\item{...}{Additional arguments passed to object constructors}
 }
 \value{
 iDA output with clustering, gene weights, and cell weights
 }
 \description{
 Set method for DESeqDataSet to input data to iDA
+}
+\examples{
+countData <- matrix(1:100,ncol=4)
+condition <- factor(c("A","A","B","B"))
+dds <- DESeq2::DESeqDataSetFromMatrix(countData, S4Vectors::DataFrame(condition), ~ condition)
+set.seed(11)
+dds <- iDA(dds)
+
 }

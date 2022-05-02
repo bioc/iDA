@@ -25,10 +25,3 @@ The SNN graph (igraph object)
 Calculate k-nearest neighbors and construct a shared nearest neighbor 
 (SNN) graph.
 }
-\examples{
-data("sc_sample_data")
-sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
-logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
-snn <- iDA::getSNN(data.use = logcounts(sce))
-
-}

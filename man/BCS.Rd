@@ -17,10 +17,3 @@ returns the between class scatter matrix
 Takes in a list of dataframes with scaled data (output from split()) and 
 returns the between class scatter matrix
 }
-\examples{
-data(iris)
-iris_input <- dplyr::select(iris, -c("Species"))
-sp_dfs <- split(iris_input, f = iris$Species)
-bcs_mat <- BCS(sp_dfs)
-
-}

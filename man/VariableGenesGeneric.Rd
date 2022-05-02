@@ -31,10 +31,3 @@ this cutoff}
 Identify rows in a data frame with high sclaed dispersion. This rule was
 taken from the Seurat package.
 }
-\examples{
-data("sc_sample_data")
-sce <- SingleCellExperiment(list(counts = as.matrix(sc_sample_data)))
-logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
-var.features <- iDA::VariableGenesGeneric(logcounts(sce))
-
-}

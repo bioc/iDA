@@ -20,10 +20,3 @@ returns the within class scatter matrix
 Takes in the output from split_clusters() and computes the within class 
 scatter matrix
 }
-\examples{
-data(iris)
-iris_input <- dplyr::select(iris, -c("Species"))
-sp_dfs <- split(iris_input, f = iris$Species)
-wcs_mat <- iDA::WCS(sp_dfs, diag = TRUE)
-
-}

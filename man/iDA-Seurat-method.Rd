@@ -23,3 +23,9 @@ object[["iDA"]] and cluster assignments stored in rowLabels
 \description{
 Method for Seurat object to input data to iDA
 }
+\examples{
+data("pbmc_small")
+force(pbmc_small)
+set.seed(11)
+pbmc_small <- iDA(pbmc_small, assay = "RNA")
+}

@@ -29,7 +29,7 @@
 #' @importFrom mclust adjustedRandIndex
 #' @return n number of dataframes for each cluster's data
 
-iDA_core <- function(var.data,
+.iDA_core <- function(var.data,
                      k.param = 10,
                      prune.SNN = 1/15,
                      dims.use = 10,
@@ -61,8 +61,9 @@ iDA_core <- function(var.data,
     }
     #pick highest modularity
     if (is.null(c.param)){
-        modularity <- c(0)
-        for (i in 2:15){
+        modularity <- c(0) # modularity = 0 at i = 1
+        for (i in 2:15){ # modularity = 0 at 1 cluster, so start at 2, cut off 
+            # at max 15 clusters
             modularity <- c(modularity, modularity(snn, 
                                                    cut_at(walktrapClusters, 
                                                           no = i)))
@@ -78,12 +79,10 @@ iDA_core <- function(var.data,
     } else {
         stop("Invalid c.param")
     }
-    
     rownames(clusters) <- rownames(transformed)
     #calculate concordance between last and current iteration's clustering 
     concordance <- adjustedRandIndex(clusters[,(ncol(clusters)-1)], 
                                      clusters[,(ncol(clusters))])
-    
     #start iterations
     i = 1        
     while(concordance < .98) {
@@ -93,7 +92,7 @@ iDA_core <- function(var.data,
         }
         # split by cluster
         splitclusters <- split(x =  as.data.frame(t(var.data)),
-                               f = factor(clusters[["currentclust"]]))
+                               f = factor(clusters[,ncol(clusters)]))
         # calculate within cluster scatter matrix
         Sw <- WCS(splitclusters = splitclusters, diag = diag)
         # calculate between cluster scatter matrix
