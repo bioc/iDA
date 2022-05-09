@@ -3,6 +3,8 @@
 #' @param object The object to run iDA on
 #' @param ... Additional arguments passed to object constructors
 #' @return iDA output with clustering, gene weights, and cell weights
+#' @examples 
+#' 
 #' @export
 setGeneric("iDA", signature=c("object"),
            function(object, ...) standardGeneric("iDA"))

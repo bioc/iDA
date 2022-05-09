@@ -53,6 +53,5 @@ Suggests:
     scPipe,
     scater,
     ggplot2,
-    Rtsne, 
-    SeuratData
+    Rtsne
 biocViews: Software, DimensionReduction, Clustering

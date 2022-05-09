@@ -65,7 +65,7 @@
     #pick highest modularity
     if (is.null(c.param)){
         modularity <- c() 
-        for (i in 1:min(ncol(transformed) - 1 ,15)){
+        for (i in seq_along(min(ncol(transformed) - 1 ,15))) {
             # at max 15 clusters
             modularity <- c(modularity, modularity(snn, 
                                                    cut_at(walktrapClusters, 
@@ -84,9 +84,9 @@
     }
     rownames(clusters) <- rownames(transformed)
     if (length(unique(clusters$currentclust)) == ncol(var.data)) {
-        stop(paste("There are ", sum(table(clusters$currentclust) == 1), 
+        stop("There are ", sum(table(clusters$currentclust) == 1), 
                    " clusters which only have one sample in them. 
-                   Consider increasing k.param."))
+                   Consider increasing k.param.")
     }
     #calculate concordance between last and current iteration's clustering 
     concordance <- adjustedRandIndex(clusters[,(ncol(clusters)-1)], 
@@ -131,7 +131,7 @@
             #pick highest modularity 
             if (is.null(c.param)){
                 modularity <- c()
-                for (i in 1:min(ncol(transformed) - 1 ,15)){
+                for (i in seq_along(min(ncol(transformed) - 1 ,15))){
                     # at max 15 clusters
                     modularity <- c(modularity, modularity(snn, 
                                                            cut_at(walktrapClusters, 

@@ -20,7 +20,7 @@ Set method for DESeqDataSet to input data to iDA
 \examples{
 data(airway, package="airway")
 se <- airway
-dds <- DESeq2::DESeqDataSet(se, ~ dex)
+dds <- DESeqDataSet(se, design = ~ dex)
 set.seed(11)
 dds <- iDA(dds)
 

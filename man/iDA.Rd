@@ -17,3 +17,6 @@ iDA output with clustering, gene weights, and cell weights
 \description{
 Generic method to input data to iDA
 }
+\examples{
+
+}
