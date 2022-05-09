@@ -1,5 +1,5 @@
 
-# iDA Bioconductor Packaghe
+# iDA Bioconductor Package
 
 This is a clone of the Bioconductor repository for the iDA package.
 
