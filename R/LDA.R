@@ -182,9 +182,10 @@ getSNN <- function(data.use,
                 call. = FALSE)
         k.param <- n.obs - 1
     }
+    # Smaller 'k' usually yields finer clusters
     SNN_igraph <- scran::buildKNNGraph(data.use, k = k.param, transposed = TRUE)
     snn.matrix <- similarity(SNN_igraph, method = "jaccard")
-    snn.matrix[snn.matrix < 1/15] <- 0
+    snn.matrix[snn.matrix < prune.SNN] <- 0
     rownames(x = snn.matrix) <- rownames(x = data.use)
     colnames(x = snn.matrix) <- rownames(x = data.use)
     snn.graph <- graph_from_adjacency_matrix(snn.matrix, 

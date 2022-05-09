@@ -37,6 +37,9 @@
                      c.param = NULL,
                      cluster.method = "walktrap") {
     #calculate svd for covariance matrix of variable_features
+    if (ncol(var.data) < dims.use){
+        dims.use <- ncol(var.data)
+    }
     svd <- svdr(as.matrix(var.data), k = dims.use)
     # transform data
     transformed <- svd$v
@@ -47,7 +50,7 @@
                       k.param = k.param, 
                       prune.SNN = prune.SNN)
         louvainClusters <- getLouvain(SNN = snn)
-        clusters <- cbind(start = rep(1,dim(transformed)[1]), 
+        . <- cbind(start = rep(1,dim(transformed)[1]), 
                           currentclust = louvainClusters)
     } else if (cluster.method == "kmeans"){
         kmeansclusters <- kmeans(transformed, centers = c.param)
@@ -61,8 +64,8 @@
     }
     #pick highest modularity
     if (is.null(c.param)){
-        modularity <- c(0) # modularity = 0 at i = 1
-        for (i in 2:15){ # modularity = 0 at 1 cluster, so start at 2, cut off 
+        modularity <- c() 
+        for (i in 1:min(ncol(transformed) - 1 ,15)){
             # at max 15 clusters
             modularity <- c(modularity, modularity(snn, 
                                                    cut_at(walktrapClusters, 
@@ -80,6 +83,11 @@
         stop("Invalid c.param")
     }
     rownames(clusters) <- rownames(transformed)
+    if (length(unique(clusters$currentclust)) == ncol(var.data)) {
+        stop(paste("There are ", sum(table(clusters$currentclust) == 1), 
+                   " clusters which only have one sample in them. 
+                   Consider increasing k.param."))
+    }
     #calculate concordance between last and current iteration's clustering 
     concordance <- adjustedRandIndex(clusters[,(ncol(clusters)-1)], 
                                      clusters[,(ncol(clusters))])
@@ -122,11 +130,12 @@
             walktrapClusters <- cluster_walktrap(snn_transformed)
             #pick highest modularity 
             if (is.null(c.param)){
-                modularity <- c(0)
-                for (j in 2:15){
-                    modularity <- c(modularity, modularity(snn_transformed, 
+                modularity <- c()
+                for (i in 1:min(ncol(transformed) - 1 ,15)){
+                    # at max 15 clusters
+                    modularity <- c(modularity, modularity(snn, 
                                                            cut_at(walktrapClusters, 
-                                                                  no = j)))
+                                                                  no = i)))
                 }
                 maxmodclust <- cut_at(walktrapClusters, 
                                       no = which.max(modularity))

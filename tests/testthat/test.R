@@ -10,7 +10,7 @@ data("sc_sample_qc")
 sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
 logcounts(sce) <- normalizeCounts(sce,  size.factors = sizeFactors(sce))
 
-#test VariableGenes
+#test VariableGenesGeneric
 var.genes <- VariableGenesGeneric(logcounts(sce), 
                         mean.low.cutoff = 0.1,
                         mean.high.cutoff = 8,

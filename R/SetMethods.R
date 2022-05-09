@@ -41,7 +41,7 @@ setMethod("iDA", "SummarizedExperiment",
               topVarGenes <- names(head(rowvars[order(-rowvars)], n = 2000))
               message(length(topVarGenes), 
                       " variable features found using rowVars(). \n")
-              var.data <- logcounts[topVarGenes,]
+              var.data <- scale.data[topVarGenes,]
               iDAoutput <- .iDA_core(var.data, ...)
               #add metadata back to object
               if (all(rownames(colData(object)) == rownames(iDAoutput$LDs))) {
@@ -61,10 +61,11 @@ setMethod("iDA", "SummarizedExperiment",
 #' @importFrom SummarizedExperiment rowData colData
 #' @importFrom genefilter rowVars
 #' @importFrom utils head
+#' @importFrom S4Vectors DataFrame
 #' @examples 
-#' countData <- matrix(1:100,ncol=4)
-#' condition <- factor(c("A","A","B","B"))
-#' dds <- DESeq2::DESeqDataSetFromMatrix(countData, S4Vectors::DataFrame(condition), ~ condition)
+#' data(airway, package="airway")
+#' se <- airway
+#' dds <- DESeqDataSet(se, design = ~ dex)
 #' set.seed(11)
 #' dds <- iDA(dds)
 #' 
@@ -78,19 +79,22 @@ setMethod("iDA", "DESeqDataSet",
               object <- estimateSizeFactors(object)
               #variance stabilizing transformation
               message("Transforming counts with vst().")
-              scale.data <- assay(vst(object, blind = TRUE))
-              rowvars <- rowVars(scale.data)
+              scale.data <- varianceStabilizingTransformation(object)
+              rowvars <- rowVars(assay(scale.data))
               names(rowvars) <- rownames(scale.data)
+              if(is.null(names(head(rowvars[order(-rowvars)], n = 2000)))) {
+                  stop("Please set rownames() to gene IDs or other identifier.")
+              }
               topVarGenes <- names(head(rowvars[order(-rowvars)], n = 2000))
               message(length(topVarGenes), 
                       " variable features found using rowVars(). \n")
-              var.data <- scale.data[topVarGenes,]
+              var.data <- assay(scale.data)[topVarGenes,]
               iDAoutput <- .iDA_core(var.data, ...)
               #add metadata back to object
               if (all(rownames(colData(object)) == rownames(iDAoutput$LDs))) {
                   colData(object) <- cbind(colData(object), 
                                            iDAoutput$LDs, 
-                                           iDAoutput$clusters)
+                                           "iDA_clusters" = as.factor(iDAoutput$clusters))
               }
               return(object)
           })
@@ -98,7 +102,7 @@ setMethod("iDA", "DESeqDataSet",
 #' Method for SingleCellExperiment object to input data to iDA
 #'
 #' @param object The single cell experiment object to run iDA on
-#' @param ... Additonal arguments passed to object constructors
+#' @param ... Additional arguments passed to object constructors
 #' @import  SingleCellExperiment 
 #' @importFrom SummarizedExperiment assays
 #' @importFrom scuttle normalizeCounts

@@ -18,9 +18,9 @@ iDA output with clustering, gene weights, and cell weights
 Set method for DESeqDataSet to input data to iDA
 }
 \examples{
-countData <- matrix(1:100,ncol=4)
-condition <- factor(c("A","A","B","B"))
-dds <- DESeq2::DESeqDataSetFromMatrix(countData, S4Vectors::DataFrame(condition), ~ condition)
+data(airway, package="airway")
+se <- airway
+dds <- DESeq2::DESeqDataSet(se, ~ dex)
 set.seed(11)
 dds <- iDA(dds)
 

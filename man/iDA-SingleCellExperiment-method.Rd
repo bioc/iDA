@@ -9,7 +9,7 @@
 \arguments{
 \item{object}{The single cell experiment object to run iDA on}
 
-\item{...}{Additonal arguments passed to object constructors}
+\item{...}{Additional arguments passed to object constructors}
 }
 \value{
 SingleCellExperiment object with iDA cell weights and gene weights 
