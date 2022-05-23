@@ -166,7 +166,7 @@ setMethod("iDA", "SingleCellExperiment",
                     parameters.") 
               } else {
               reducedDims(object) <- list(iDAcellweights = iDA_sce[["LDs"]])
-              reducedDims(object) <- list(iDAgeneweights = iDA_sce[["feature_weights"]])
+              #reducedDims(object) <- list(iDAgeneweights = iDA_sce[["feature_weights"]])
               colData(object)[["iDAclusters"]] <- iDA_sce[["clusters"]]
               return(object)
               }
