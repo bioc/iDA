@@ -64,9 +64,18 @@
         modularity <- c(0) 
         for (i in seq_len(min(ncol(transformed) - 1 ,15))[-1]) {
             # at max 15 clusters
-            modularity <- c(modularity, modularity(snn, 
-                                                   cut_at(walktrapClusters, 
-                                                          no = i)))
+            tt <- tryCatch(cut_at(walktrapClusters, 
+                                  no = i),
+                           error=function(e) e, 
+                           warning=function(w) w)
+            if(is(tt,"warning")) {
+                modularity <- c(modularity, 0)
+            } else {
+                modularity <- c(modularity, 
+                                modularity(snn, 
+                                           cut_at(walktrapClusters,
+                                                  no = i)))
+            }
         }
         maxmodclust <- cut_at(walktrapClusters, no = which.max(modularity))
         clusters <- as.data.frame(cbind(start = rep(1,nrow(transformed)), 
@@ -130,9 +139,18 @@
                 modularity <- c(0)
                 for (i in seq_len(min(ncol(transformed) - 1 ,15))[-1]){
                     # at max 15 clusters
-                    modularity <- c(modularity, modularity(snn, 
-                                                           cut_at(walktrapClusters, 
-                                                                  no = i)))
+                    tt <- tryCatch(cut_at(walktrapClusters, 
+                                          no = i),
+                                   error=function(e) e, 
+                                   warning=function(w) w)
+                    if(is(tt,"warning")) {
+                        modularity <- c(modularity, 0)
+                    } else {
+                        modularity <- c(modularity, 
+                                        modularity(snn, 
+                                                   cut_at(walktrapClusters,
+                                                          no = i)))
+                    }
                 }
                 maxmodclust <- cut_at(walktrapClusters, 
                                       no = which.max(modularity))
