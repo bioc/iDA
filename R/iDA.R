@@ -62,7 +62,7 @@
     #pick highest modularity
     if (is.null(c.param)){
         modularity <- c(0) 
-        for (i in seq_along(min(ncol(transformed) - 1 ,15))[-1]) {
+        for (i in seq_len(min(ncol(transformed) - 1 ,15))[-1]) {
             # at max 15 clusters
             modularity <- c(modularity, modularity(snn, 
                                                    cut_at(walktrapClusters, 
@@ -128,7 +128,7 @@
             #pick highest modularity 
             if (is.null(c.param)){
                 modularity <- c(0)
-                for (i in seq_along(min(ncol(transformed) - 1 ,15))[-1]){
+                for (i in seq_len(min(ncol(transformed) - 1 ,15))[-1]){
                     # at max 15 clusters
                     modularity <- c(modularity, modularity(snn, 
                                                            cut_at(walktrapClusters, 
