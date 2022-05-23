@@ -1,1 +1,1 @@
-vignettes/iDAvignette.Rmd
+ln -s vignettes/iDAvignette.Rmd README.md
