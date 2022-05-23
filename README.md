@@ -1,1 +1,1 @@
-vignettes/BiocOncoTK.Rmd
+vignettes/iDAvignette.Rmd
