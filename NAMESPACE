@@ -3,7 +3,6 @@
 export(iDA)
 exportMethods(iDA)
 import(DESeq2)
-import(Seurat)
 import(SingleCellExperiment)
 import(SummarizedExperiment)
 import(airway)

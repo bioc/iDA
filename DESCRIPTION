@@ -6,9 +6,9 @@ Authors@R: c(person("Theresa", "Alexander",
     email = "reesyxan@gmail.com", role = "cre"), 
     person("Hector", "Corrada Bravo", 
     email = "hcorrada@gmail.com", role = "aut"))
-Imports: scran, igraph, irlba, SingleCellExperiment, Seurat, plyr, 
-    NetworkToolbox, DESeq2, SummarizedExperiment, mclust, stats, 
-    scuttle, genefilter, dplyr, utils, airway, S4Vectors
+Imports: scran, igraph, irlba, SingleCellExperiment, NetworkToolbox, DESeq2, 
+    SummarizedExperiment, mclust, stats, scuttle, genefilter, dplyr, utils, 
+    airway, S4Vectors, plyr
 Description: Discovering low-dimensional embeddings that describe the separation 
     of any underlying discrete latent structure in data is an important 
     motivation for applying these techniques since these latent classes can 
@@ -53,5 +53,7 @@ Suggests:
     scPipe,
     scater,
     ggplot2,
-    Rtsne
+    Rtsne,
+    celldex,
+    scRNAseq
 biocViews: Software, DimensionReduction, Clustering

@@ -194,7 +194,7 @@ getSNN <- function(data.use,
     return(snn.graph)
 }
 
-#' Cluster Determination
+#' Louvain Cluster Determination
 #'
 #' Identify clusters of cells by a shared nearest neighbor (SNN) modularity
 #' optimization based clustering algorithm. Optimize the modularity function to
@@ -204,9 +204,15 @@ getSNN <- function(data.use,
 #' @param SNN a matrix of shared nearest neighbors (output from getSNN)
 #' @importFrom NetworkToolbox louvain
 #' @return a list of identities for clustering
-getLouvain <- function(SNN){
-    louvain_clusters <- cluster_louvain(SNN)
+getLouvain <- function(data.use, k.param, prune.SNN){
+    snn <- getSNN(data.use = data.use, 
+                  k.param = k.param, 
+                  prune.SNN = prune.SNN)
+    louvain_clusters <- cluster_louvain(snn)
     idents <- louvain_clusters$membership
     return(idents)
 }
+
+
+
 

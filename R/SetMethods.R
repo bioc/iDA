@@ -21,35 +21,54 @@ setGeneric("iDA", signature=c("object"),
 #' @importFrom utils head
 #' @return iDA output with clustering, gene weights, and cell weights
 #' @examples 
-#' data(airway, package="airway")
-#' se <- airway
+#' exp <- matrix(rpois(20000, 5), ncol=20)
+#' colnames(exp) <- paste0("donor", seq_len(ncol(exp)))
+#' rownames(exp) <- paste0("gene", seq_len(nrow(exp)))
+#' logexp <- logexp <- log2(exp + 1)
+#' conditions <- factor(rep(1:4, 5))
+#' se <- SummarizedExperiment::SummarizedExperiment(
+#' assays = list(counts = exp, logcounts = logexp),
+#' colData = data.frame(conditions = conditions))
 #' set.seed(11)
 #' se <- iDA(se)
 #' 
 #' @export
 setMethod("iDA", "SummarizedExperiment",
-          function(object, ...) {
+          function(object, nFeatures = 2000, ...) {
               # Filtering counts < 10
-              keep <- rowSums(assays(object)[["counts"]]) >= 10
-              object <- object[keep,]
-              #normalize counts
-              dds <- DESeqDataSet(object, design = ~ 1)
-              dds <- estimateSizeFactors(dds)
-              #variance stabilizing transformation
-              message("Transforming counts with vst().")
-              scale.data <- assay(vst(dds, blind = TRUE))
+              if(!is.null(assays(object)[["counts"]])) {
+                  keep <- rowSums(assays(object)[["counts"]]) >= 10
+                  object <- object[keep,]
+    
+                  #normalize counts
+                  dds <- DESeqDataSet(object, design = ~ 1)
+                  dds <- estimateSizeFactors(dds)
+                  #variance stabilizing transformation
+                  message("Transforming counts with varianceStabilizingTransformation().")
+                  scale.data <- assay(varianceStabilizingTransformation(dds, 
+                                                                  blind = TRUE))
+              } else if (!is.null(assays(object)[["logcounts"]])){
+                  scale.data <- assays(object)[["logcounts"]]
+              } else {
+                  stop("Did not find 'counts' or 'logcounts' in assays().")
+              }
               rowvars <- rowVars(scale.data)
               names(rowvars) <- rownames(scale.data)
-              topVarGenes <- names(head(rowvars[order(-rowvars)], n = 2000))
+              topVarGenes <- names(head(rowvars[order(-rowvars)], n = nFeatures))
               message(length(topVarGenes), 
                       " variable features found using rowVars(). \n")
               var.data <- scale.data[topVarGenes,]
               iDAoutput <- .iDA_core(var.data, ...)
               #add metadata back to object
+              if(is.null(iDAoutput)){
+                  message("Only one cluster found and no LDA to compute.")
+                  message("If this is an error, please try adjusting the clustering parameters.")
+              } else {
               if (all(rownames(colData(object)) == rownames(iDAoutput$LDs))) {
                   colData(object) <- cbind(colData(object), 
                                            iDAoutput$LDs, 
-                                           iDAoutput$clusters)
+                                           "iDA_clusters" = iDAoutput$clusters)
+                  }
               }
               return(object)
           })
@@ -64,16 +83,16 @@ setMethod("iDA", "SummarizedExperiment",
 #' @importFrom genefilter rowVars
 #' @importFrom utils head
 #' @importFrom S4Vectors DataFrame
-#' @examples 
-#' data(airway, package="airway")
-#' se <- airway
-#' dds <- DESeqDataSet(se, design = ~ dex)
-#' set.seed(11)
-#' dds <- iDA(dds)
+# #' @examples 
+# #' data(airway, package="airway")
+# #' se <- airway
+# #' dds <- DESeq2::DESeqDataSet(se, design = ~ dex)
+# #' set.seed(11)
+# #' dds <- iDA(dds)
 #' 
 #' @export
 setMethod("iDA", "DESeqDataSet",
-          function(object, ...) {
+          function(object, nFeatures = 2000, ...) {
               # Filtering counts < 10
               keep <- rowSums(counts(object)) >= 10
               object <- object[keep,]
@@ -84,16 +103,19 @@ setMethod("iDA", "DESeqDataSet",
               scale.data <- varianceStabilizingTransformation(object)
               rowvars <- rowVars(assay(scale.data))
               names(rowvars) <- rownames(scale.data)
-              if(is.null(names(head(rowvars[order(-rowvars)], n = 2000)))) {
+              if(is.null(names(head(rowvars[order(-rowvars)], n = nFeatures)))) {
                   stop("Please set rownames() to gene IDs or other identifier.")
               }
-              topVarGenes <- names(head(rowvars[order(-rowvars)], n = 2000))
+              topVarGenes <- names(head(rowvars[order(-rowvars)], n = nFeatures))
               message(length(topVarGenes), 
                       " variable features found using rowVars(). \n")
               var.data <- assay(scale.data)[topVarGenes,]
               iDAoutput <- .iDA_core(var.data, ...)
               #add metadata back to object
-              if (all(rownames(colData(object)) == rownames(iDAoutput$LDs))) {
+              if (is.null(iDAoutput)){
+                message("Only one cluster found and no LDA to compute.")
+                message("If this is an error, please try adjusting the clustering parameters.")
+              } else if (all(rownames(colData(object)) == rownames(iDAoutput$LDs))) {
                   colData(object) <- cbind(colData(object), 
                                            iDAoutput$LDs, 
                                            "iDA_clusters" = as.factor(iDAoutput$clusters))
@@ -111,14 +133,15 @@ setMethod("iDA", "DESeqDataSet",
 #' @return SingleCellExperiment object with iDA cell weights and gene weights 
 #' stored in reducedDims and cluster assignments stored in rowLabels
 #' @examples 
-#' data("sc_sample_data")
-#' sce <- SingleCellExperiment::SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
+#' library(SingleCellExperiment)
+#' data(sc_sample_data, package = "scPipe")
+#' sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
 #' set.seed(11)
 #' sce <- iDA(sce)
 #' 
 #' @export
 setMethod("iDA", "SingleCellExperiment",
-          function(object, ...) {
+          function(object, nFeatures = 2000, ...) {
               if (!('logcounts' %in% names(assays(object)))){
                   logcounts(object) <- normalizeCounts(object,  
                                             size.factors = sizeFactors(object))
@@ -128,62 +151,20 @@ setMethod("iDA", "SingleCellExperiment",
                   var.features <- rownames(normcounts)
               } else {
                   stats <- modelGeneVar(normcounts)
-                  var.features <- getTopHVGs(stats, n = 2000)
+                  var.features <- getTopHVGs(stats, n = nFeatures)
               }
               message(length(var.features), 
                       " variable features found using scran::getTopHVGs. \n")
               var.data <- normcounts[var.features, ]
               iDA_sce <- .iDA_core(var.data, ...)
+              if (is.null(iDA_sce)){
+                  message("Only one cluster found and no LDA to compute. 
+                    If this is an error, please try adjusting the clustering 
+                    parameters.") 
+              } else {
               reducedDims(object) <- list(iDAcellweights = iDA_sce[["LDs"]])
               colLabels(object) <- list(iDAclusters = iDA_sce[["clusters"]])
               return(object)
+              }
           })
 
-#' Method for Seurat object to input data to iDA
-#'
-#' @param object The single cell experiment object to run iDA on
-#' @param assay The assay to take counts from
-#' @param selection.method The Seurat method to use for variable feature 
-#' selection. 
-#' @param ... Additional arguments passed to object constructors
-#' @import Seurat 
-#' @return Seurat object with iDA cell weights and gene weights stored in 
-#' object[["iDA"]] and cluster assignments stored in rowLabels
-#' 
-#' @examples
-#' data("pbmc_small")
-#' force(pbmc_small)
-#' set.seed(11)
-#' pbmc_small <- iDA(pbmc_small, assay = "RNA")
-#' @export
-setMethod("iDA", "Seurat",
-          function(object, assay, selection.method = "dispersion", ...) {
-              if (length(GetAssayData(object, slot = "scale.data")) == 0){
-                  object <- NormalizeData(
-                      object, 
-                      normalization.method = "LogNormalize", 
-                      scale.factor = 10000
-                  ) #normalize data
-                  object <- ScaleData(object) #center and scale
-                  scale.data <- GetAssayData(object, slot = "scale.data") 
-              } else {
-                  scale.data <- GetAssayData(object, slot = "scale.data") 
-              }
-              if (length(VariableFeatures(object)) == 0) {
-                  object <- FindVariableFeatures(object, 
-                                                 selection.method = selection.method)
-              }
-              var.features <- VariableFeatures(object)
-              message(length(var.features), 
-                      " variable features found using FindVariableFeatures(). \n")
-              var.data <- scale.data[var.features,]
-              iDA_seurat <- .iDA_core(var.data, ...)
-              object[["iDA"]] <- CreateDimReducObject(embeddings = as.matrix(iDA_seurat[["LDs"]]),
-                                                      key = "LD",
-                                                      loadings = as.matrix(iDA_seurat[["feature_weights"]]),
-                                                      assay = assay)
-              object <- AddMetaData(object = object, 
-                                    metadata = iDA_seurat[["clusters"]], 
-                                    col.name = "iDA_clust")
-              return(object)
-          })

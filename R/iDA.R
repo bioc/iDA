@@ -45,27 +45,24 @@
     transformed <- svd$v
     rownames(transformed) <- colnames(var.data)
     #cluster
+    clusters <- data.frame(start = rep(1, nrow(transformed)))
     if(cluster.method == "louvain") {
-        snn <- getSNN(data.use = transformed, 
-                      k.param = k.param, 
-                      prune.SNN = prune.SNN)
-        louvainClusters <- getLouvain(SNN = snn)
-        . <- cbind(start = rep(1,dim(transformed)[1]), 
-                          currentclust = louvainClusters)
+        louvainClusters <- getLouvain(data.use = transformed, 
+                                        k.param = k.param, 
+                                        prune.SNN = prune.SNN)
+        clusters[["init_clust"]] <- louvainClusters
     } else if (cluster.method == "kmeans"){
         kmeansclusters <- kmeans(transformed, centers = c.param)
-        clusters <- cbind(start = rep(1,dim(transformed)[1]), 
-                          currentclust = kmeansclusters$cluster)
+        clusters[["init_clust"]] <- kmeansclusters
     } else if (cluster.method == "walktrap"){
         snn <- getSNN(data.use = transformed, 
                       k.param = k.param, 
                       prune.SNN = prune.SNN)
         walktrapClusters <- cluster_walktrap(snn)
-    }
     #pick highest modularity
     if (is.null(c.param)){
-        modularity <- c() 
-        for (i in seq_along(min(ncol(transformed) - 1 ,15))) {
+        modularity <- c(0) 
+        for (i in seq_along(min(ncol(transformed) - 1 ,15))[-1]) {
             # at max 15 clusters
             modularity <- c(modularity, modularity(snn, 
                                                    cut_at(walktrapClusters, 
@@ -73,18 +70,19 @@
         }
         maxmodclust <- cut_at(walktrapClusters, no = which.max(modularity))
         clusters <- as.data.frame(cbind(start = rep(1,nrow(transformed)), 
-                                        currentclust = maxmodclust))
+                                        init_clust = maxmodclust))
     } else if (is.numeric(c.param)) {
         maxmodclust <- cut_at(walktrapClusters, 
                               no = c.param)
         clusters <- as.data.frame(cbind(start = rep(1,nrow(transformed)), 
-                                        currentclust = maxmodclust))
+                                        init_clust = maxmodclust))
     } else {
         stop("Invalid c.param")
+        }
     }
     rownames(clusters) <- rownames(transformed)
-    if (length(unique(clusters$currentclust)) == ncol(var.data)) {
-        stop("There are ", sum(table(clusters$currentclust) == 1), 
+    if (length(unique(clusters[["init_clust"]])) == ncol(var.data)) {
+        stop("There are ", sum(table(clusters[["init_clust"]]) == 1), 
                    " clusters which only have one sample in them. 
                    Consider increasing k.param.")
     }
@@ -93,7 +91,8 @@
                                      clusters[,(ncol(clusters))])
     #start iterations
     i = 1        
-    while(concordance < .98) {
+    if (concordance < .98){
+        while(concordance < .98) {
         if(i > 1){
             message("iteration ", i-1)
             message("concordance: ", concordance)
@@ -112,16 +111,14 @@
         eigenvectransformed <- t(var.data) %*% eigenvecs
         #calculate SNN matrix for top LDs
         if (cluster.method == "louvain") {
-            snn <- getSNN(data.use = eigenvectransformed, 
-                          k.param = k.param, 
-                          prune.SNN = prune.SNN)
-            louvainClusters <- getLouvain(SNN = as.matrix(snn))
-            clusters <- cbind(clusters, currentclust = louvainClusters)
+            louvainClusters <- getLouvain(data.use = eigenvectransformed, 
+                                          k.param = k.param, 
+                                          prune.SNN = prune.SNN)
+            clusters[[paste0("currentclust_", i+1)]] <- louvainClusters
         } else if (cluster.method == "kmeans"){
             kmeansclusters <- kmeans(eigenvectransformed, 
                                      centers = c.param)
-            clusters <- cbind(clusters, 
-                              currentclust = kmeansclusters$cluster)
+            clusters[[paste0("currentclust_", i+1)]] <- kmeansclusters[["cluster"]]
         } else if (cluster.method == "walktrap"){
             snn_transformed <- getSNN(data.use = eigenvectransformed, 
                                       k.param = k.param, 
@@ -130,8 +127,8 @@
             walktrapClusters <- cluster_walktrap(snn_transformed)
             #pick highest modularity 
             if (is.null(c.param)){
-                modularity <- c()
-                for (i in seq_along(min(ncol(transformed) - 1 ,15))){
+                modularity <- c(0)
+                for (i in seq_along(min(ncol(transformed) - 1 ,15))[-1]){
                     # at max 15 clusters
                     modularity <- c(modularity, modularity(snn, 
                                                            cut_at(walktrapClusters, 
@@ -139,13 +136,11 @@
                 }
                 maxmodclust <- cut_at(walktrapClusters, 
                                       no = which.max(modularity))
-                clusters <- cbind(clusters, 
-                                  currentclust = maxmodclust)
+                clusters[[paste0("currentclust_", i+1)]] <- maxmodclust
             } else if (is.numeric(c.param)) {
                 maxmodclust <- cut_at(walktrapClusters, 
                                       no = c.param)
-                clusters <- cbind(clusters, 
-                                  currentclust = maxmodclust)
+                clusters[[paste0("currentclust_", i+1)]] <- maxmodclust
             } else {
                 stop("Invalid c.param")
             }
@@ -153,7 +148,7 @@
         concordance <- adjustedRandIndex(clusters[,(ncol(clusters)-1)], 
                                          clusters[,(ncol(clusters))])
         i = i + 1
-    }
+        }
     geneweights <- as.data.frame(eigenvecs)
     rownames(geneweights) <- rownames(var.data)
     colnames(geneweights) <- paste("LD", seq(ncol(geneweights)), sep = "")
@@ -163,8 +158,11 @@
                                            sep = "")
     message("final concordance: ")
     message(concordance)
-    retlist <- list(clusters = clusters[, dim(clusters)[2]],
+    retlist <- list(clusters = clusters[, ncol(clusters)],
                     LDs = eigenvectransformed,
                     feature_weights = geneweights)
     return(retlist)
+    } else {
+        return(NULL)
+    }
 }

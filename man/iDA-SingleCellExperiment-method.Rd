@@ -19,8 +19,9 @@ stored in reducedDims and cluster assignments stored in rowLabels
 Method for SingleCellExperiment object to input data to iDA
 }
 \examples{
-data("sc_sample_data")
-sce <- SingleCellExperiment::SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
+library(SingleCellExperiment)
+data(sc_sample_data, package = "scPipe")
+sce <- SingleCellExperiment(assays = list(counts = as.matrix(sc_sample_data)))
 set.seed(11)
 sce <- iDA(sce)
 

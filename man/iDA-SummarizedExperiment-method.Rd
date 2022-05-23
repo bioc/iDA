@@ -18,8 +18,14 @@ iDA output with clustering, gene weights, and cell weights
 Set method for SummarizedExperiment to input data to iDA
 }
 \examples{
-data(airway, package="airway")
-se <- airway
+exp <- matrix(rpois(20000, 5), ncol=20)
+colnames(exp) <- paste0("donor", seq_len(ncol(exp)))
+rownames(exp) <- paste0("gene", seq_len(nrow(exp)))
+logexp <- logexp <- log2(exp + 1)
+conditions <- factor(rep(1:4, 5))
+se <- SummarizedExperiment::SummarizedExperiment(
+assays = list(counts = exp, logcounts = logexp),
+colData = data.frame(conditions = conditions))
 set.seed(11)
 se <- iDA(se)
 
