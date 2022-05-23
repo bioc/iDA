@@ -4,10 +4,12 @@
 \alias{iDA,SingleCellExperiment-method}
 \title{Method for SingleCellExperiment object to input data to iDA}
 \usage{
-\S4method{iDA}{SingleCellExperiment}(object, ...)
+\S4method{iDA}{SingleCellExperiment}(object, nFeatures = 2000, ...)
 }
 \arguments{
 \item{object}{The single cell experiment object to run iDA on}
+
+\item{nFeatures}{The number of HVG features to use in reduction}
 
 \item{...}{Additional arguments passed to object constructors}
 }

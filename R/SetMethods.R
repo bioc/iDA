@@ -13,6 +13,7 @@ setGeneric("iDA", signature=c("object"),
 #' Set method for SummarizedExperiment to input data to iDA
 #'
 #' @param object The object to run iDA on
+#' @param nFeatures The number of HVG features to use in reduction
 #' @param ... Additional arguments passed to object constructors
 #' @import airway
 #' @import SummarizedExperiment
@@ -76,6 +77,7 @@ setMethod("iDA", "SummarizedExperiment",
 #' Set method for DESeqDataSet to input data to iDA
 #'
 #' @param object The object to run iDA on
+#' @param nFeatures The number of HVG features to use in reduction
 #' @param ... Additional arguments passed to object constructors
 #' @return iDA output with clustering, gene weights, and cell weights
 #' @import DESeq2
@@ -126,6 +128,7 @@ setMethod("iDA", "DESeqDataSet",
 #' Method for SingleCellExperiment object to input data to iDA
 #'
 #' @param object The single cell experiment object to run iDA on
+#' @param nFeatures The number of HVG features to use in reduction
 #' @param ... Additional arguments passed to object constructors
 #' @import  SingleCellExperiment 
 #' @importFrom SummarizedExperiment assays

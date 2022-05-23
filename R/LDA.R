@@ -1,53 +1,3 @@
-#' Find Variable Genes
-#'
-#' Identify rows in a data frame with high sclaed dispersion. This rule was
-#' taken from the Seurat package.
-#'
-#' @param NormCounts (data.frame) features are rows, samples are columns. 
-#' Rows must be named.
-#' @param dispersion.cutoff (numeric) rows returned will have scaled dispersion 
-#' higher provided cutoff
-#' @param mean.low.cutoff (numeric) rows returned will have average higher than 
-#' this cutoff
-#' @param mean.high.cutoff (numeric) rows returned will have average lower than
-#'  this cutoff
-#' @importFrom stats sd var
-#' @return (character) a list of row names with high dispersion rows
-VariableGenesGeneric <- function(NormCounts,
-                                 dispersion.cutoff = 1,
-                                 mean.low.cutoff = 0.1,
-                                 mean.high.cutoff = 8) {
-    ## calculate logged means and VMR
-    ExpMeans <- apply(NormCounts, 1, FUN = function(x) log(mean(exp(x) - 1) + 1))
-    finite_idx <- is.finite(ExpMeans)
-    data.use <- NormCounts[finite_idx, ]
-    ExpMeans <- ExpMeans[finite_idx]
-    dispersions <- apply(data.use, 1, FUN = function(x) {log(var(exp(x) - 1) / mean( exp(x) - 1))})
-    dispersions <- dispersions[finite_idx]
-    dispersions[is.na(x = dispersions)] <- 0
-    ExpMeans[is.na(x = ExpMeans)] <- 0
-    num.bin <- 20
-    data.x.bin <- cut(x = ExpMeans, breaks = num.bin)
-    names(x = data.x.bin) <- names(x = ExpMeans)
-    mean.y <- tapply(X = dispersions, INDEX = data.x.bin, FUN = mean)
-    sd.y <- tapply(X = dispersions, INDEX = data.x.bin, FUN = sd)
-    
-    ## scale dispersions
-    scaled.dispersions <- (dispersions - mean.y[as.numeric(x = data.x.bin)]) /
-        sd.y[as.numeric(x = data.x.bin)]
-    names(x = scaled.dispersions) <- names(x = ExpMeans)
-    ## find variable features
-    variable_idx <- scaled.dispersions > dispersion.cutoff &
-        ExpMeans > mean.low.cutoff &
-        ExpMeans < mean.high.cutoff
-    var.features <- names(dispersions[variable_idx])
-    retlist <- list(
-        "dispersions" = data.frame(scaled.dispersions, ExpMeans),
-        "use.data" = data.use,
-        "var.features" = var.features)
-    return(retlist)
-}
-
 #' Compute each cluster's within class scatter matrix
 #'
 #' Takes in the output from split_clusters() and computes the within class 
@@ -201,7 +151,13 @@ getSNN <- function(data.use,
 #' determine clusters. For a full description of the algorithms, see Waltman and
 #' van Eck (2013) \emph{The European Physical Journal B}.
 #'
-#' @param SNN a matrix of shared nearest neighbors (output from getSNN)
+#' @param data.use (matrix) Matrix with scaled data to find nearest neighbors
+#' @param k.param (numeric) Defines k for the k-nearest neighbor algorithm
+#' @param prune.SNN (numeric) Sets the cutoff for acceptable Jaccard index when
+#'  computing the neighborhood overlap for the SNN construction. Any edges with
+#'  values less than or equal to this will be set to 0 and removed from the SNN
+#'  graph. Essentially sets the strigency of pruning (0 --- no pruning, 1 ---
+#'  prune everything).
 #' @importFrom NetworkToolbox louvain
 #' @return a list of identities for clustering
 getLouvain <- function(data.use, k.param, prune.SNN){

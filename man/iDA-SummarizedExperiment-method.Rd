@@ -4,10 +4,12 @@
 \alias{iDA,SummarizedExperiment-method}
 \title{Set method for SummarizedExperiment to input data to iDA}
 \usage{
-\S4method{iDA}{SummarizedExperiment}(object, ...)
+\S4method{iDA}{SummarizedExperiment}(object, nFeatures = 2000, ...)
 }
 \arguments{
 \item{object}{The object to run iDA on}
+
+\item{nFeatures}{The number of HVG features to use in reduction}
 
 \item{...}{Additional arguments passed to object constructors}
 }

@@ -4,10 +4,12 @@
 \alias{iDA,DESeqDataSet-method}
 \title{Set method for DESeqDataSet to input data to iDA}
 \usage{
-\S4method{iDA}{DESeqDataSet}(object, ...)
+\S4method{iDA}{DESeqDataSet}(object, nFeatures = 2000, ...)
 }
 \arguments{
 \item{object}{The object to run iDA on}
+
+\item{nFeatures}{The number of HVG features to use in reduction}
 
 \item{...}{Additional arguments passed to object constructors}
 }

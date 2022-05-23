@@ -2,12 +2,20 @@
 % Please edit documentation in R/LDA.R
 \name{getLouvain}
 \alias{getLouvain}
-\title{Cluster Determination}
+\title{Louvain Cluster Determination}
 \usage{
-getLouvain(SNN)
+getLouvain(data.use, k.param, prune.SNN)
 }
 \arguments{
-\item{SNN}{a matrix of shared nearest neighbors (output from getSNN)}
+\item{data.use}{(matrix) Matrix with scaled data to find nearest neighbors}
+
+\item{k.param}{(numeric) Defines k for the k-nearest neighbor algorithm}
+
+\item{prune.SNN}{(numeric) Sets the cutoff for acceptable Jaccard index when
+computing the neighborhood overlap for the SNN construction. Any edges with
+values less than or equal to this will be set to 0 and removed from the SNN
+graph. Essentially sets the strigency of pruning (0 --- no pruning, 1 ---
+prune everything).}
 }
 \value{
 a list of identities for clustering
