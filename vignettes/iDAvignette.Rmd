@@ -124,7 +124,7 @@ You can also change the `nFeatures` parameter to use a different number of HVGs 
 
 
 ```{r, eval = FALSE}
-sce <- iDA(sve, nFeatures = 3000)
+sce <- iDA(sce, nFeatures = 3000)
 ```
 
 
