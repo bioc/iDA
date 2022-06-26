@@ -101,7 +101,7 @@
                                      clusters[,(ncol(clusters))])
     #start iterations
     i = 1        
-    if (concordance < .98){
+    if (concordance < .98 & i <= 15){
         while(concordance < .98) {
         if(i > 1){
             message("iteration ", i-1)
@@ -167,6 +167,9 @@
         concordance <- adjustedRandIndex(clusters[,(ncol(clusters)-1)], 
                                          clusters[,(ncol(clusters))])
         i = i + 1
+        }
+        if (i > 15) {
+            message("No convergence after 15 iterations. Saving current iteration reductions.")
         }
     geneweights <- as.data.frame(eigenvecs)
     rownames(geneweights) <- rownames(var.data)
