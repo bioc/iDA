@@ -37,7 +37,9 @@ setGeneric("iDA", signature=c("object"),
 setMethod("iDA", "SummarizedExperiment",
           function(object, nFeatures = 2000, ...) {
               # Filtering counts < 10
-              if(!is.null(assays(object)[["counts"]])) {
+              if (!is.null(assays(object)[["logcounts"]])){
+                  scale.data <- assays(object)[["logcounts"]]
+              } else if(!is.null(assays(object)[["counts"]])) {
                   keep <- rowSums(assays(object)[["counts"]]) >= 10
                   object <- object[keep,]
     
@@ -48,8 +50,6 @@ setMethod("iDA", "SummarizedExperiment",
                   message("Transforming counts with varianceStabilizingTransformation().")
                   scale.data <- assay(varianceStabilizingTransformation(dds, 
                                                                   blind = TRUE))
-              } else if (!is.null(assays(object)[["logcounts"]])){
-                  scale.data <- assays(object)[["logcounts"]]
               } else {
                   stop("Did not find 'counts' or 'logcounts' in assays().")
               }
@@ -71,6 +71,7 @@ setMethod("iDA", "SummarizedExperiment",
                                            "iDA_clusters" = iDAoutput$clusters)
                   }
               }
+              object <- setFeatureWeights(object, iDAoutput[["feature_weights"]])
               return(object)
           })
 
@@ -122,6 +123,7 @@ setMethod("iDA", "DESeqDataSet",
                                            iDAoutput$LDs, 
                                            "iDA_clusters" = as.factor(iDAoutput$clusters))
               }
+              object <- setFeatureWeights(object, iDAoutput[["feature_weights"]])
               return(object)
           })
 
@@ -168,6 +170,7 @@ setMethod("iDA", "SingleCellExperiment",
               reducedDims(object) <- list(iDAcellweights = iDA_sce[["LDs"]])
               #reducedDims(object) <- list(iDAgeneweights = iDA_sce[["feature_weights"]])
               colData(object)[["iDAclusters"]] <- iDA_sce[["clusters"]]
+              object <- setFeatureWeights(object, iDA_sce[["feature_weights"]])
               return(object)
               }
           })
