@@ -169,6 +169,35 @@ getLouvain <- function(data.use, k.param, prune.SNN){
     return(idents)
 }
 
+#' Set Feature Weights from iDA
+#'
+#' 
+#' @param object (SE or SCE) an SE or SCE object in which to fill in feature weights
+#' @param feature.weights (matrix) matrix of features x LDs which is output from iDA 
+#' @return an SE or SCE object with rowData() for the iDA feature weights
+setFeatureWeights <- function(object, feature.weights){
+    #add column indicating if a gene is an iDA variable feature or not
+    rowData(object)[rownames(feature.weights), "iDA_var.feature"] <- TRUE
+    rowData(object)[is.na(rowData(object)[["iDA_var.feature"]]), "iDA_var.feature"] <- FALSE
+    for (cn in colnames(feature.weights)) { 
+        rowData(object)[[cn]] <- 0
+        rowData(object)[rownames(feature.weights), ][[cn]] <- feature.weights[,cn]
+        }
+    return(object)
+}
 
+#' Get Feature Weights from iDA
+#'
+#' 
+#' @param object (SE or SCE) an SE or SCE object in which to fill in feature weights
+#' @importFrom dplyr %>% filter select
+#' @return a data.frame of features x LDs containing the feature weights from iDA
+getFeatureWeights <- function(object){
+    feature.weights <- rowData(object) %>%
+        as.data.frame() %>%
+        filter(iDA_var.feature == TRUE) %>%
+        select(contains("LD"))
+    return(feature.weights)
+}
 
 
