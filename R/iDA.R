@@ -27,6 +27,7 @@
 #' @import plyr
 #' @importFrom stats kmeans
 #' @importFrom mclust adjustedRandIndex
+#' @importFrom methods is
 #' @return n number of dataframes for each cluster's data
 
 .iDA_core <- function(var.data,
@@ -62,10 +63,10 @@
     #pick highest modularity
     if (is.null(c.param)){
         modularity <- c(0) 
-        for (i in seq_len(min(ncol(transformed) - 1 ,15))[-1]) {
+        for (k in seq_len(min(ncol(transformed) - 1 ,15))[-1]) {
             # at max 15 clusters
             tt <- tryCatch(cut_at(walktrapClusters, 
-                                  no = i),
+                                  no = k),
                            error=function(e) e, 
                            warning=function(w) w)
             if(is(tt,"warning")) {
@@ -74,7 +75,7 @@
                 modularity <- c(modularity, 
                                 modularity(snn, 
                                            cut_at(walktrapClusters,
-                                                  no = i)))
+                                                  no = k)))
             }
         }
         maxmodclust <- cut_at(walktrapClusters, no = which.max(modularity))
@@ -137,10 +138,10 @@
             #pick highest modularity 
             if (is.null(c.param)){
                 modularity <- c(0)
-                for (i in seq_len(min(ncol(transformed) - 1 ,15))[-1]){
+                for (j in seq_len(min(ncol(transformed) - 1 ,15))[-1]){
                     # at max 15 clusters
                     tt <- tryCatch(cut_at(walktrapClusters, 
-                                          no = i),
+                                          no = j),
                                    error=function(e) e, 
                                    warning=function(w) w)
                     if(is(tt,"warning")) {
@@ -149,10 +150,10 @@
                         modularity <- c(modularity, 
                                         modularity(snn, 
                                                    cut_at(walktrapClusters,
-                                                          no = i)))
+                                                          no = j)))
                     }
                 }
-                maxmodclust <- cut_at(walktrapClusters, 
+                maxmodclust <- cut_at(walktrapClusters,
                                       no = which.max(modularity))
                 clusters[[paste0("currentclust_", i+1)]] <- maxmodclust
             } else if (is.numeric(c.param)) {
