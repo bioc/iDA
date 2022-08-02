@@ -7,9 +7,11 @@
 setFeatureWeights(object, feature.weights)
 }
 \arguments{
-\item{object}{(SE or SCE) an SE or SCE object in which to fill in feature weights}
+\item{object}{(SE or SCE) an SE or SCE object in which to fill in feature 
+weights}
 
-\item{feature.weights}{(matrix) matrix of features x LDs which is output from iDA}
+\item{feature.weights}{(matrix) matrix of features x LDs which is output 
+from iDA}
 }
 \value{
 an SE or SCE object with rowData() for the iDA feature weights

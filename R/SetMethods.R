@@ -10,6 +10,40 @@ setGeneric("iDA", signature=c("object"),
            function(object, ...) standardGeneric("iDA"))
 
 
+#' Set method for matrix input to iDA
+#'
+#' @param object The normalized matrix (feature x sample) to run iDA on
+#' @param nFeatures The number of HVG features to use in reduction
+#' @param ... Additional arguments passed to object constructors
+#' @importFrom genefilter rowVars
+#' @importFrom utils head
+#' @return iDA output with clustering, gene weights, and cell weights as a list
+#' @examples 
+#' exp <- matrix(rpois(20000, 5), ncol=20)
+#' colnames(exp) <- paste0("donor", seq_len(ncol(exp)))
+#' rownames(exp) <- paste0("gene", seq_len(nrow(exp)))
+#' logexp <- logexp <- log2(exp + 1)
+#' set.seed(11)
+#' ida <- iDA(logexp)
+#' 
+#' @export
+setMethod("iDA", "matrix",
+          function(object, nFeatures = 2000, ...) {
+              #center and scale
+              scale.data <- scale(object, center = TRUE, scale = TRUE)
+              
+              rowvars <- rowVars(scale.data)
+              names(rowvars) <- rownames(scale.data)
+              topVarGenes <- names(head(rowvars[order(-rowvars)], n = nFeatures))
+              message(length(topVarGenes), 
+                      " variable features found using rowVars(). \n")
+              var.data <- scale.data[topVarGenes,]
+              iDAoutput <- .iDA_core(var.data, ...)
+
+              return(iDAoutput)
+          })
+
+
 #' Set method for SummarizedExperiment to input data to iDA
 #'
 #' @param object The object to run iDA on
@@ -62,8 +96,7 @@ setMethod("iDA", "SummarizedExperiment",
               iDAoutput <- .iDA_core(var.data, ...)
               #add metadata back to object
               if(is.null(iDAoutput)){
-                  message("Only one cluster found and no LDA to compute.")
-                  message("If this is an error, please try adjusting the clustering parameters.")
+                  message("Only one cluster found and no LDA to compute. \nIf this is an error, please try adjusting the clustering parameters.")
               } else {
               if (all(rownames(colData(object)) == rownames(iDAoutput$LDs))) {
                   colData(object) <- cbind(colData(object), 
@@ -86,12 +119,12 @@ setMethod("iDA", "SummarizedExperiment",
 #' @importFrom genefilter rowVars
 #' @importFrom utils head
 #' @importFrom S4Vectors DataFrame
-# #' @examples 
-# #' data(airway, package="airway")
-# #' se <- airway
-# #' dds <- DESeq2::DESeqDataSet(se, design = ~ dex)
-# #' set.seed(11)
-# #' dds <- iDA(dds)
+#' @examples 
+#' data(airway, package="airway")
+#' se <- airway
+#' dds <- DESeq2::DESeqDataSet(se, design = ~ dex)
+#' set.seed(11)
+#' dds <- iDA(dds)
 #' 
 #' @export
 setMethod("iDA", "DESeqDataSet",
@@ -116,8 +149,7 @@ setMethod("iDA", "DESeqDataSet",
               iDAoutput <- .iDA_core(var.data, ...)
               #add metadata back to object
               if (is.null(iDAoutput)){
-                message("Only one cluster found and no LDA to compute.")
-                message("If this is an error, please try adjusting the clustering parameters.")
+                message("Only one cluster found and no LDA to compute. \nIf this is an error, please try adjusting the clustering parameters.")
               } else if (all(rownames(colData(object)) == rownames(iDAoutput$LDs))) {
                   colData(object) <- cbind(colData(object), 
                                            iDAoutput$LDs, 
@@ -163,9 +195,7 @@ setMethod("iDA", "SingleCellExperiment",
               var.data <- normcounts[var.features, ]
               iDA_sce <- .iDA_core(var.data, ...)
               if (is.null(iDA_sce)){
-                  message("Only one cluster found and no LDA to compute. 
-                    If this is an error, please try adjusting the clustering 
-                    parameters.") 
+                  message("Only one cluster found and no LDA to compute. \nIf this is an error, please try adjusting the clustering parameters.") 
               } else {
               reducedDims(object) <- list(iDAcellweights = iDA_sce[["LDs"]])
               #reducedDims(object) <- list(iDAgeneweights = iDA_sce[["feature_weights"]])

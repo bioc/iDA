@@ -31,14 +31,14 @@
 #' @return n number of dataframes for each cluster's data
 
 .iDA_core <- function(var.data,
-                     k.param = 10,
-                     prune.SNN = 1/15,
-                     dims.use = 10,
-                     diag = TRUE,
-                     c.param = NULL,
-                     cluster.method = "walktrap") {
+                        k.param = 10,
+                        prune.SNN = 1/15,
+                        dims.use = 10,
+                        diag = TRUE,
+                        c.param = NULL,
+                        cluster.method = "walktrap") {
     #calculate svd for covariance matrix of variable_features
-    if (ncol(var.data) < dims.use){
+    if (ncol(var.data) < dims.use) {
         dims.use <- ncol(var.data)
     }
     svd <- svdr(as.matrix(var.data), k = dims.use)
@@ -99,10 +99,15 @@
     #calculate concordance between last and current iteration's clustering 
     concordance <- adjustedRandIndex(clusters[,(ncol(clusters)-1)], 
                                      clusters[,(ncol(clusters))])
+    if (ncol(var.data) >= 100) {
+        conc_thresh <- .98
+    } else {
+        conc_thresh <- 1 - 3/ncol(var.data)
+    }
+
     #start iterations
     i = 1        
-    if (concordance < .98 & i <= 15){
-        while(concordance < .98) {
+        while(concordance < conc_thresh & i <= 15) {
         if(i > 1){
             message("iteration ", i-1)
             message("concordance: ", concordance)
@@ -128,7 +133,8 @@
         } else if (cluster.method == "kmeans"){
             kmeansclusters <- kmeans(eigenvectransformed, 
                                      centers = c.param)
-            clusters[[paste0("currentclust_", i+1)]] <- kmeansclusters[["cluster"]]
+            colname <- paste0("currentclust_", i+1)
+            clusters[[colname]] <- kmeansclusters[["cluster"]]
         } else if (cluster.method == "walktrap"){
             snn_transformed <- getSNN(data.use = eigenvectransformed, 
                                       k.param = k.param, 
@@ -168,8 +174,8 @@
                                          clusters[,(ncol(clusters))])
         i = i + 1
         }
-        if (i > 15) {
-            message("No convergence after 15 iterations. Saving current iteration reductions.")
+        if (i == 15) {
+            message("No convergence after 15 iterations. Consider modifying parameters.")
         }
     geneweights <- as.data.frame(eigenvecs)
     rownames(geneweights) <- rownames(var.data)
@@ -184,7 +190,5 @@
                     LDs = eigenvectransformed,
                     feature_weights = geneweights)
     return(retlist)
-    } else {
-        return(NULL)
-    }
-}
+    } 
+

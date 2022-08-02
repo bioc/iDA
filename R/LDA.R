@@ -23,7 +23,7 @@ WCS <- function(splitclusters, diag = FALSE) {
     k <- 1
     for (i in splitclusters) {
         dataMatrix <- t(i)
-        wcsm[[k]] <- (t(t(dataMatrix) - clustermeans[[k]])) %*% (t(dataMatrix) - clustermeans[[k]])
+        wcsm[[k]] <- (t(i - clustermeans[[k]])) %*% (i - clustermeans[[k]])
         k <- k + 1
     }
     
@@ -31,7 +31,8 @@ WCS <- function(splitclusters, diag = FALSE) {
     Sw <- array(0L, dim(wcsm[[1]]))
     k <- 1
     
-    list <- vapply(splitclusters, function(l) l[1], FUN.VALUE = list(numeric(1)))
+    list <- vapply(splitclusters, 
+                   function(l) l[1], FUN.VALUE = list(numeric(1)))
     n_obs <- sum(lengths(list))
     
     for (i in wcsm) {
@@ -172,32 +173,22 @@ getLouvain <- function(data.use, k.param, prune.SNN){
 #' Set Feature Weights from iDA
 #'
 #' 
-#' @param object (SE or SCE) an SE or SCE object in which to fill in feature weights
-#' @param feature.weights (matrix) matrix of features x LDs which is output from iDA 
+#' @param object (SE or SCE) an SE or SCE object in which to fill in feature 
+#' weights
+#' @param feature.weights (matrix) matrix of features x LDs which is output 
+#' from iDA 
 #' @return an SE or SCE object with rowData() for the iDA feature weights
 setFeatureWeights <- function(object, feature.weights){
     #add column indicating if a gene is an iDA variable feature or not
     rowData(object)[rownames(feature.weights), "iDA_var.feature"] <- TRUE
-    rowData(object)[is.na(rowData(object)[["iDA_var.feature"]]), "iDA_var.feature"] <- FALSE
+    false_rows <- is.na(rowData(object)[["iDA_var.feature"]])
+    rowData(object)[false_rows, "iDA_var.feature"] <- FALSE
     for (cn in colnames(feature.weights)) { 
         rowData(object)[[cn]] <- 0
-        rowData(object)[rownames(feature.weights), ][[cn]] <- feature.weights[,cn]
+        keep_rows <- rownames(feature.weights)
+        rowData(object)[keep_rows, ][[cn]] <- feature.weights[,cn]
         }
     return(object)
-}
-
-#' Get Feature Weights from iDA
-#'
-#' 
-#' @param object (SE or SCE) an SE or SCE object in which to fill in feature weights
-#' @importFrom dplyr %>% filter select
-#' @return a data.frame of features x LDs containing the feature weights from iDA
-getFeatureWeights <- function(object){
-    feature.weights <- rowData(object) %>%
-        as.data.frame() %>%
-        filter(iDA_var.feature == TRUE) %>%
-        select(contains("LD"))
-    return(feature.weights)
 }
 
 
