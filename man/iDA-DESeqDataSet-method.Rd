@@ -19,11 +19,3 @@ iDA output with clustering, gene weights, and cell weights
 \description{
 Set method for DESeqDataSet to input data to iDA
 }
-\examples{
-data(airway, package="airway")
-se <- airway
-dds <- DESeq2::DESeqDataSet(se, design = ~ dex)
-set.seed(11)
-dds <- iDA(dds)
-
-}

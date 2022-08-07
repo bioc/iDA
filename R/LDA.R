@@ -23,7 +23,7 @@ WCS <- function(splitclusters, diag = FALSE) {
     k <- 1
     for (i in splitclusters) {
         dataMatrix <- t(i)
-        wcsm[[k]] <- (t(i - clustermeans[[k]])) %*% (i - clustermeans[[k]])
+        wcsm[[k]] <- (t(t(dataMatrix) - clustermeans[[k]])) %*% (t(dataMatrix) - clustermeans[[k]])
         k <- k + 1
     }
     

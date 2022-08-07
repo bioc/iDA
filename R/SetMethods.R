@@ -119,12 +119,6 @@ setMethod("iDA", "SummarizedExperiment",
 #' @importFrom genefilter rowVars
 #' @importFrom utils head
 #' @importFrom S4Vectors DataFrame
-#' @examples 
-#' data(airway, package="airway")
-#' se <- airway
-#' dds <- DESeq2::DESeqDataSet(se, design = ~ dex)
-#' set.seed(11)
-#' dds <- iDA(dds)
 #' 
 #' @export
 setMethod("iDA", "DESeqDataSet",

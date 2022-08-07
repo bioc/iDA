@@ -25,6 +25,6 @@ colnames(exp) <- paste0("donor", seq_len(ncol(exp)))
 rownames(exp) <- paste0("gene", seq_len(nrow(exp)))
 logexp <- logexp <- log2(exp + 1)
 set.seed(11)
-se <- iDA(logexp)
+ida <- iDA(logexp)
 
 }
