@@ -29,6 +29,7 @@
 #' @importFrom mclust adjustedRandIndex
 #' @importFrom methods is
 #' @return n number of dataframes for each cluster's data
+#' @rdname iDA
 
 .iDA_core <- function(var.data,
                         k.param = 10,

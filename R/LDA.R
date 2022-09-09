@@ -9,6 +9,7 @@
 #'  zeroed
 #' @importFrom dplyr select
 #' @return returns the within class scatter matrix
+#' @rdname iDA
 WCS <- function(splitclusters, diag = FALSE) {
     ## calculate means vector for each cluster
     clustermeans <- c()
@@ -55,6 +56,7 @@ WCS <- function(splitclusters, diag = FALSE) {
 #' scaled data from each cluster
 #' @importFrom dplyr select
 #' @return returns the between class scatter matrix
+#' @rdname iDA
 BCS <- function(splitclusters) {
     ## calculate means vector for each cluster
     clustermeans <- c()
@@ -96,6 +98,7 @@ BCS <- function(splitclusters) {
 #' @param nu The number of columns (eigenvectors) to keep 
 #' @importFrom dplyr select
 #' @return returns the between class scatter matrix
+#' @rdname iDA
 decomposeSVD <- function(WCSmat,
                          BCSmat,
                          nu = 10) {
@@ -122,6 +125,7 @@ decomposeSVD <- function(WCSmat,
 #' @import igraph
 #' @import scran
 #' @return The SNN graph (igraph object)
+#' @rdname iDA
 getSNN <- function(data.use,
                    k.param = 10,
                    prune.SNN = 1/15) {
@@ -161,6 +165,7 @@ getSNN <- function(data.use,
 #'  prune everything).
 #' @importFrom NetworkToolbox louvain
 #' @return a list of identities for clustering
+#' @rdname iDA
 getLouvain <- function(data.use, k.param, prune.SNN){
     snn <- getSNN(data.use = data.use, 
                   k.param = k.param, 
@@ -178,6 +183,7 @@ getLouvain <- function(data.use, k.param, prune.SNN){
 #' @param feature.weights (matrix) matrix of features x LDs which is output 
 #' from iDA 
 #' @return an SE or SCE object with rowData() for the iDA feature weights
+#' @rdname iDA
 setFeatureWeights <- function(object, feature.weights){
     #add column indicating if a gene is an iDA variable feature or not
     rowData(object)[rownames(feature.weights), "iDA_var.feature"] <- TRUE

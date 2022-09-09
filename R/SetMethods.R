@@ -3,6 +3,7 @@
 #' @param object The object to run iDA on
 #' @param ... Additional arguments passed to object constructors
 #' @return iDA output with clustering, gene weights, and cell weights
+#' @rdname methods
 #' @examples 
 #' 
 #' @export
@@ -18,6 +19,7 @@ setGeneric("iDA", signature=c("object"),
 #' @importFrom genefilter rowVars
 #' @importFrom utils head
 #' @return iDA output with clustering, gene weights, and cell weights as a list
+#' @rdname methods
 #' @examples 
 #' exp <- matrix(rpois(20000, 5), ncol=20)
 #' colnames(exp) <- paste0("donor", seq_len(ncol(exp)))
@@ -55,6 +57,7 @@ setMethod("iDA", "matrix",
 #' @importFrom genefilter rowVars
 #' @importFrom utils head
 #' @return iDA output with clustering, gene weights, and cell weights
+#' @rdname methods
 #' @examples 
 #' exp <- matrix(rpois(20000, 5), ncol=20)
 #' colnames(exp) <- paste0("donor", seq_len(ncol(exp)))
@@ -119,6 +122,7 @@ setMethod("iDA", "SummarizedExperiment",
 #' @importFrom genefilter rowVars
 #' @importFrom utils head
 #' @importFrom S4Vectors DataFrame
+#' @rdname methods
 #' 
 #' @export
 setMethod("iDA", "DESeqDataSet",
@@ -163,6 +167,7 @@ setMethod("iDA", "DESeqDataSet",
 #' @importFrom scuttle normalizeCounts
 #' @return SingleCellExperiment object with iDA cell weights and gene weights 
 #' stored in reducedDims and cluster assignments stored in rowLabels
+#' @rdname methods
 #' @examples 
 #' library(SingleCellExperiment)
 #' data(sc_sample_data, package = "scPipe")
