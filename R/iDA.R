@@ -167,7 +167,8 @@
                 maxmodclust <- cut_at(walktrapClusters, 
                                       no = c.param)
                 clusters[[paste0("currentclust_", i+1)]] <- maxmodclust
-            } else {
+            } el
+            se {
                 stop("Invalid c.param")
             }
         }
