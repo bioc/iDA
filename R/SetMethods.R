@@ -65,8 +65,8 @@ setMethod("iDA", "matrix",
 #' logexp <- logexp <- log2(exp + 1)
 #' conditions <- factor(rep(1:4, 5))
 #' se <- SummarizedExperiment::SummarizedExperiment(
-#' assays = list(counts = exp, logcounts = logexp),
-#' colData = data.frame(conditions = conditions))
+#' assays <- list(counts = exp, logcounts = logexp),
+#' colData <- data.frame(conditions = conditions))
 #' set.seed(11)
 #' se <- iDA(se)
 #' 

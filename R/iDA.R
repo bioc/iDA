@@ -107,7 +107,7 @@
     }
 
     #start iterations
-    i = 1        
+    i <- 1        
         while(concordance < conc_thresh & i <= 15) {
         if(i > 1){
             message("iteration ", i-1)
@@ -173,7 +173,7 @@
         }
         concordance <- adjustedRandIndex(clusters[,(ncol(clusters)-1)], 
                                          clusters[,(ncol(clusters))])
-        i = i + 1
+        i <- i + 1
         }
         if (i == 15) {
             message("No convergence after 15 iterations. Consider modifying parameters.")
