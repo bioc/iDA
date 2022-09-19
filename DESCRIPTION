@@ -1,7 +1,7 @@
 Package: iDA
 Type: Package
 Title: Define embedding space for data with clustered architecture
-Version: 0.99.4
+Version: 0.99.5
 Maintainer: Theresa Alexander <reesyxan@gmail.com>
 Authors@R: c(person("Theresa", "Alexander", 
     email = "reesyxan@gmail.com", role = "cre"), 
